@@ -1,0 +1,48 @@
+<div *ngIf="version == '1'">
+  <label for="message">Mensaje: </label>
+  <input type="text" id="message" [(ngModel)]="message" />
+  <button (click)="callChatGpt()">Enviar</button>
+</div>
+
+<!--! V2 -->
+
+<div *ngIf="version == '2'">
+  <label for="message">Mensaje: </label>
+  <input type="text" id="message" [(ngModel)]="message" />
+  <button (click)="callChatGpt()">Enviar</button>
+
+  <hr />
+  <div *ngFor="let item of chatHistory">
+    <div><strong>Usuario:</strong> {{ item.message }}</div>
+    <div><strong>Chatbot:</strong> {{ item.response }}</div>
+  </div>
+</div>
+
+<!--! V3 -->
+
+<div *ngIf="version == '3'">
+  <div class="conversation-container">
+    <div
+      *ngFor="let item of chatHistory"
+      [ngClass]="{
+        'user-message': item['type'] === 'user',
+        'bot-message': item['type'] === 'bot'
+      }"
+    >
+      <div *ngIf="item['type'] === 'user'">
+        <strong>Tú:</strong> {{ item.message }}
+      </div>
+      <div *ngIf="item['type'] === 'bot'">
+        <strong>Chatbot:</strong> {{ item.response }}
+      </div>
+    </div>
+  </div>
+  <div class="input-container">
+    <p-inputText [(ngModel)]="message" styleClass="input-text"></p-inputText>
+    <p-button
+      label="Enviar"
+      (click)="callChatGpt()"
+      styleClass="send-button"
+    ></p-button>
+  </div>
+</div>
