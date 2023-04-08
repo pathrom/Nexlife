@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ChatgptComponent } from './chatgpt/chatgpt.component';
+import { ChatgptComponent } from './components/chatgpt/chatgpt.component';
 
 const routes: Routes = [
   {

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { ChatgptComponent } from './chatgpt/chatgpt.component';
+import { ChatgptComponent } from './components/chatgpt/chatgpt.component';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from './shared/modules/shared.module';
 
