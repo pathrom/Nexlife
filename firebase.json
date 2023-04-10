@@ -4,11 +4,10 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-	"site": "nexlife",
     "public": "dist",
     "ignore": [
       "firebase.json",
-      "**/.*", 
+      "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
@@ -22,4 +21,3 @@
     "rules": "storage.rules"
   }
 }
-
