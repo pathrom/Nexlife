@@ -4,7 +4,7 @@ import { ChatgptComponent } from './components/chatgpt/chatgpt.component';
 
 const routes: Routes = [
   {
-    path: 'chatgpt',
+    path: '',
     component: ChatgptComponent,
   },
 ];

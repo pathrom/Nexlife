@@ -1,5 +1,5 @@
 {
-  "name": "future-ai",
+  "name": "nexlife",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "^15.2.0",
     "@angular/router": "^15.2.0",
     "chart.js": "^4.2.1",
+    "firebase": "^9.19.1",
     "openai": "^3.2.1",
     "primeng": "^15.3.0",
     "rxjs": "~7.8.0",
