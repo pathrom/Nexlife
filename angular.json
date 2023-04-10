@@ -31,7 +31,6 @@
             "scripts": [],
             "allowedCommonJsDependencies": ["chart.js"]
           },
-
           "configurations": {
             "production": {
               "budgets": [
@@ -58,10 +57,6 @@
             }
           },
           "defaultConfiguration": "production"
-        },
-        "deploy": {
-          "builder": "@angular/fire:deploy",
-          "options": {}
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
