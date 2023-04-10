@@ -1,5 +1,4 @@
 <div class="chat-container">
-  <div>{{ costMsg }}</div>
   <div class="chat-history">
     <div
       *ngFor="let item of chatHistory"
@@ -26,4 +25,5 @@
     />
     <button pButton label="Enviar" (click)="callChatGpt()"></button>
   </div>
+  <div>{{ costMsg }}</div>
 </div>

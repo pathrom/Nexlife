@@ -7,9 +7,10 @@ import { AppComponent } from './app.component';
 import { ChatgptComponent } from './components/chatgpt/chatgpt.component';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from './shared/modules/shared.module';
+import { PrivacyPolicyComponent } from './shared/privacy-policy/privacy-policy.component';
 
 @NgModule({
-  declarations: [AppComponent, ChatgptComponent],
+  declarations: [AppComponent, ChatgptComponent, PrivacyPolicyComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
