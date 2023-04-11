@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 import { CommonModule } from '@angular/common';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -13,6 +15,7 @@ import { PrivacyPolicyComponent } from './shared/privacy-policy/privacy-policy.c
   declarations: [AppComponent, ChatgptComponent, PrivacyPolicyComponent],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     FormsModule,
     CommonModule,

@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { PrimeNGModule } from './primeng.module';
 import { MaterialModule } from './material.module';
+import { LottiesModule } from './lottie.module';
 
 @NgModule({
   declarations: [],
@@ -15,6 +16,7 @@ import { MaterialModule } from './material.module';
     RouterModule,
     PrimeNGModule,
     MaterialModule,
+    LottiesModule,
   ],
 })
 export class SharedModule {}

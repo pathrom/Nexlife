@@ -1,1 +1,138 @@
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use "@angular/material" as mat;
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
+//  The following line adds:
+//    1. Default typography styles for all components
+//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
+//  If you specify typography styles for the components you use elsewhere, you should delete this line.
+//  If you don't need the default component typographies but still want the hierarchy styles,
+//  you can delete this line and instead use:
+//    `@include mat.legacy-typography-hierarchy(mat.define-legacy-typography-config());`
+@include mat.all-legacy-component-typographies();
+@include mat.legacy-core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+$nexlife-primary: mat.define-palette(mat.$indigo-palette);
+$nexlife-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+
+// The warn palette is optional (defaults to red).
+$nexlife-warn: mat.define-palette(mat.$red-palette);
+
+// Create the theme object. A theme consists of configurations for individual
+// theming systems such as "color" or "typography".
+$nexlife-theme: mat.define-light-theme(
+  (
+    color: (
+      primary: $nexlife-primary,
+      accent: $nexlife-accent,
+      warn: $nexlife-warn,
+    ),
+  )
+);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include mat.all-legacy-component-themes($nexlife-theme);
+
 /* You can add global styles to this file, and also import other style files */
+
+$gutter: 1rem; //for primeflex grid system
+@import "assets/layout/styles/layout/layout.scss";
+
+/* PrimeNG */
+@import "../node_modules/primeng/resources/primeng.min.css";
+@import "../node_modules/primeflex/primeflex.scss";
+@import "../node_modules/primeicons/primeicons.css";
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+button {
+  border-radius: 8px !important;
+}
+
+.p-card {
+  border-radius: 16px !important;
+  padding: 0.5em !important;
+  max-width: 900px !important;
+  margin: auto;
+}
+.p-card .p-card-content {
+  margin: auto;
+  text-align: center;
+  justify-content: center;
+  display: grid;
+}
+
+.p-float-label label {
+  margin-top: -1.5rem;
+}
+
+.pi-eye {
+  margin-top: -1.5rem !important;
+}
+
+small {
+  text-align: left !important;
+  padding: 0.75rem 0.75rem;
+}
+
+.card {
+  text-align: center;
+  background: var(--surface-card);
+  box-shadow: 0 2px 1px -1px rgb(0 0 0 / 20%), 0 1px 1px 0 rgb(0 0 0 / 14%),
+    0 1px 3px 0 rgb(0 0 0 / 12%);
+  border-radius: 8px;
+  border: 0;
+  display: grid;
+}
+
+.mat-dialog-container,
+.mat-dialog-container .card {
+  box-shadow: none !important;
+  background: var(--surface-card) !important;
+  padding: 3rem;
+}
+small {
+  text-align: center;
+}
+
+p-dropdown {
+  width: 100%;
+}
+
+.p-datatable-wrapper {
+  border-radius: 12px 12px 0px 0px;
+}
+
+.p-paginator .p-component {
+  border-radius: 12px;
+}
+
+.p-input-filled .p-inputgroup input {
+  border-radius: 12px !important;
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}

@@ -1,5 +1,17 @@
 <div class="chat-container">
   <div class="chat-history">
+    <!-- <div class="user-message">
+      <div class="message">Holaaaaaaaaaaaaaaaaaaaaaaa</div>
+    </div>
+    <div class="bot-message"><div class="message">Adioooooooooooooos</div></div> -->
+    <div *ngIf="!callFirstTime" class="containerLottie">
+      <ng-lottie
+        containerClass="moving-box another-class"
+        [styles]="styles"
+        [options]="options"
+      ></ng-lottie>
+    </div>
+
     <div
       *ngFor="let item of chatHistory"
       [ngClass]="{
@@ -18,12 +30,24 @@
     </div>
   </div>
   <div class="chat-input">
-    <input
-      [(ngModel)]="message"
-      (keyup.enter)="callChatGpt()"
-      placeholder="Escribe tu mensaje..."
-    />
-    <button pButton label="Enviar" (click)="callChatGpt()"></button>
+    <div class="card flex flex-column md:flex-row gap-3">
+      <div class="p-inputgroup">
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="message"
+          (keyup.enter)="callChatGpt()"
+          placeholder="Write your message..."
+        />
+        <button
+          type="button"
+          pButton
+          icon="pi pi-send"
+          class="sendButton"
+          (click)="callChatGpt()"
+        ></button>
+      </div>
+    </div>
   </div>
-  <div>{{ costMsg }}</div>
+  <div *ngIf="isDevMode" class="costTokens">{{ costMsg }}</div>
 </div>

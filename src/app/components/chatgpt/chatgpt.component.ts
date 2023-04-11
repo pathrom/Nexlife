@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Configuration, OpenAIApi } from 'openai';
-
+import { ActivatedRoute } from '@angular/router';
+import { AnimationItem } from 'lottie-web';
+import { AnimationOptions } from 'ngx-lottie';
 @Component({
   selector: 'app-chatgpt',
   templateUrl: './chatgpt.component.html',
@@ -13,8 +15,18 @@ export class ChatgptComponent implements OnInit {
   isLoading = false;
   costMsg = '';
   versionGPT = '3';
+  isDevMode: boolean = false;
 
-  constructor() {}
+  options: AnimationOptions = {
+    path: '/assets/lotties/load.json',
+  };
+  styles: Partial<CSSStyleDeclaration> = {
+    width: '40vw',
+  };
+  callFirstTime: boolean = false;
+  constructor(private route: ActivatedRoute) {
+    this.devMode();
+  }
 
   ngOnInit(): void {
     const apiKey = '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';
@@ -28,6 +40,7 @@ export class ChatgptComponent implements OnInit {
 
   async callChatGpt(): Promise<void> {
     this.isLoading = true;
+    this.callFirstTime = true;
 
     const model = this.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
     const inputText = this.message;
@@ -69,6 +82,14 @@ export class ChatgptComponent implements OnInit {
       synth.speak(utterance);
     } else {
       console.warn('Speech synthesis is not supported in this browser.');
+    }
+  }
+  devMode() {
+    if (this.route.snapshot.queryParamMap.get('devMode')) {
+      console.log('Yes devMode');
+      this.isDevMode = true;
+    } else {
+      console.log('No devMode');
     }
   }
 }
