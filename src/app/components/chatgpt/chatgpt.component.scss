@@ -16,6 +16,8 @@
 
 .chat-input {
   input {
+    height: 3.5em;
+    font-size: 1em;
     flex-grow: 1;
     border: 1px solid #ccc;
     border-radius: 1em 0em 0em 1em;
@@ -27,7 +29,9 @@
   color: #666666;
   border-radius: 0em 1em 1em 0em !important;
 }
-
+.card {
+  padding: 2em;
+}
 .cost-message {
   position: absolute;
   top: 0;
@@ -119,4 +123,8 @@
 .containerLottie {
   text-align: -webkit-center;
   margin-top: 25vh;
+}
+
+:host ::ng-deep .p-button {
+  width: 100px;
 }

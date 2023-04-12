@@ -1,9 +1,5 @@
 <div class="chat-container">
   <div class="chat-history">
-    <!-- <div class="user-message">
-      <div class="message">Holaaaaaaaaaaaaaaaaaaaaaaa</div>
-    </div>
-    <div class="bot-message"><div class="message">Adioooooooooooooos</div></div> -->
     <div *ngIf="!callFirstTime" class="containerLottie">
       <ng-lottie
         containerClass="moving-box another-class"
@@ -49,5 +45,25 @@
       </div>
     </div>
   </div>
-  <div *ngIf="isDevMode" class="costTokens">{{ costMsg }}</div>
+
+  <div class="devModeZone">
+    <div *ngIf="isDevMode" class="costTokens">{{ costMsg }}</div>
+
+    <div *ngIf="isDevMode">
+      <p-button
+        label="Change Version Chat GPT 3"
+        (onClick)="changeVersionChatGPT('3')"
+      ></p-button>
+
+      <p-button
+        label="Change Version Chat GPT 4"
+        (onClick)="changeVersionChatGPT('4')"
+      ></p-button>
+
+      <p-button
+        label="Reset History Chat"
+        (onClick)="resetHistoryChat()"
+      ></p-button>
+    </div>
+  </div>
 </div>

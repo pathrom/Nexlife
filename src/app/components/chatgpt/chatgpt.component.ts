@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { Configuration, OpenAIApi } from 'openai';
+import {
+  ChatCompletionRequestMessageRoleEnum,
+  Configuration,
+  OpenAIApi,
+} from 'openai';
 import { ActivatedRoute } from '@angular/router';
-import { AnimationItem } from 'lottie-web';
 import { AnimationOptions } from 'ngx-lottie';
 @Component({
   selector: 'app-chatgpt',
@@ -16,7 +19,10 @@ export class ChatgptComponent implements OnInit {
   costMsg = '';
   versionGPT = '3';
   isDevMode: boolean = false;
-
+  role: string = 'user'; // system, user
+  config = {
+    enableContextHistoryChat: true,
+  };
   options: AnimationOptions = {
     path: '/assets/lotties/load.json',
   };
@@ -24,6 +30,7 @@ export class ChatgptComponent implements OnInit {
     width: '40vw',
   };
   callFirstTime: boolean = false;
+
   constructor(private route: ActivatedRoute) {
     this.devMode();
   }
@@ -31,6 +38,7 @@ export class ChatgptComponent implements OnInit {
   ngOnInit(): void {
     const apiKey = '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';
     this.openAi = this.createOpenAiClient(apiKey);
+    this.loadChatHistory();
   }
 
   createOpenAiClient(apiKey: string): OpenAIApi {
@@ -38,16 +46,37 @@ export class ChatgptComponent implements OnInit {
     return new OpenAIApi(configuration);
   }
 
+  saveChatHistory(): void {
+    localStorage.setItem('chatHistory', JSON.stringify(this.chatHistory));
+  }
+
   async callChatGpt(): Promise<void> {
     this.isLoading = true;
     this.callFirstTime = true;
-
+    let inputText = '';
     const model = this.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
-    const inputText = this.message;
+
+    if (this.chatHistory && this.chatHistory.length > 0) {
+      let context = this.chatHistory.map((item) => item.message).join(' ');
+      inputText =
+        'Context: ' +
+        context +
+        ' --------------------- Message: ' +
+        this.message;
+    } else {
+      inputText = this.message;
+    }
+
+    console.log('🚀 ~ ChatgptComponent ~ callChatGpt ~ inputText:', inputText);
 
     const response = await this.openAi.createChatCompletion({
       model,
-      messages: [{ role: 'system', content: inputText }],
+      messages: [
+        {
+          role: this.role as ChatCompletionRequestMessageRoleEnum,
+          content: inputText,
+        },
+      ],
     });
 
     const chatResponse = response.data.choices[0].message.content;
@@ -63,13 +92,37 @@ export class ChatgptComponent implements OnInit {
     const cost = tokensUsed * COST_PER_TOKEN;
     this.costMsg = `Tokens used: ${tokensUsed} \n Cost: ${cost.toFixed(4)}`;
   }
+
+  loadChatHistory(): void {
+    let storedChatHistory = localStorage.getItem('chatHistory');
+    console.log(
+      '🚀 ~ ChatgptComponent ~ loadChatHistory ~ storedChatHistory:',
+      storedChatHistory
+    );
+
+    if (storedChatHistory && storedChatHistory !== '[]') {
+      if (this.config.enableContextHistoryChat === true) {
+        this.chatHistory = JSON.parse(storedChatHistory);
+        this.callFirstTime = true;
+      }
+    }
+  }
+
   async callBot(inputText: string, chatResponse: string): Promise<void> {
     console.log(chatResponse);
-    const userMessage = { message: inputText, response: '', type: 'user' };
+    let userMessage = {};
+
+    if (this.chatHistory.length > 0) {
+      userMessage = { message: this.message, response: '', type: 'user' };
+    } else {
+      userMessage = { message: inputText, response: '', type: 'user' };
+    }
+
     const botMessage = { message: chatResponse, response: '', type: 'bot' };
 
     this.chatHistory.push(userMessage);
     this.chatHistory.push(botMessage);
+    this.saveChatHistory(); // Guardar la conversación en LocalStorage
 
     this.message = '';
     // await this.speakText(chatResponse);
@@ -84,12 +137,31 @@ export class ChatgptComponent implements OnInit {
       console.warn('Speech synthesis is not supported in this browser.');
     }
   }
+
   devMode() {
+    console.log(
+      '🚀 ~ ChatgptComponent ~ devMode ~ this.route.snapshot:',
+      this.route.snapshot
+    );
     if (this.route.snapshot.queryParamMap.get('devMode')) {
       console.log('Yes devMode');
       this.isDevMode = true;
     } else {
       console.log('No devMode');
     }
+  }
+
+  changeVersionChatGPT(version: string): void {
+    console.log(
+      '🚀 ~ ChatgptComponent ~ changeVersionChatGPT ~ version:',
+      version
+    );
+    this.versionGPT = version;
+  }
+  resetHistoryChat(): void {
+    localStorage.removeItem('chatHistory');
+    this.chatHistory = [];
+
+    this.saveChatHistory();
   }
 }
