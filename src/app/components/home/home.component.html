@@ -1,0 +1,21 @@
+<div class="p-d-flex p-jc-center">
+  <form [formGroup]="myForm" (ngSubmit)="onSubmit()" class="p-fluid">
+    <div class="p-field">
+      <label for="nombre">Nombre:</label>
+      <input id="nombre" type="text" pInputText formControlName="nombre" />
+    </div>
+    <div class="p-field">
+      <label for="apellido">Apellido:</label>
+      <input id="apellido" type="text" pInputText formControlName="apellido" />
+    </div>
+    <div class="p-field">
+      <label for="email">Correo electrónico:</label>
+      <input id="email" type="email" pInputText formControlName="email" />
+    </div>
+    <div class="p-field">
+      <label for="pais">País:</label>
+      <p-dropdown id="pais" [options]="paises" formControlName="pais"></p-dropdown>
+    </div>
+    <button pButton type="submit" label="Enviar" [disabled]="myForm.invalid"></button>
+  </form>
+</div>

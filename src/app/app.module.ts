@@ -10,9 +10,15 @@ import { ChatgptComponent } from './components/chatgpt/chatgpt.component';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from './shared/modules/shared.module';
 import { PrivacyPolicyComponent } from './shared/privacy-policy/privacy-policy.component';
+import { HomeComponent } from './components/home/home.component';
 
 @NgModule({
-  declarations: [AppComponent, ChatgptComponent, PrivacyPolicyComponent],
+  declarations: [
+    AppComponent,
+    ChatgptComponent,
+    PrivacyPolicyComponent,
+    HomeComponent,
+  ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
