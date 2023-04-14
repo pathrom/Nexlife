@@ -36,7 +36,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { DividerModule } from 'primeng/divider';
 import { DynamicDialogModule } from 'primeng/dynamicdialog';
 import { KeyFilterModule } from 'primeng/keyfilter';
-
+import { StepsModule } from 'primeng/steps';
 const PrimeNG = [
   ChartModule,
   DividerModule,
@@ -75,6 +75,7 @@ const PrimeNG = [
   ToastModule,
   SelectButtonModule,
   KeyFilterModule,
+  StepsModule,
 ];
 
 @NgModule({

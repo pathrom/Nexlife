@@ -1,0 +1,23 @@
+.buttom-left {
+  bottom: 0;
+  position: absolute;
+  background-color: white !important;
+  color: #006464 !important;
+  padding: 2em 4em;
+  border-radius: 0em 1em 0em 0em !important;
+  text-decoration: underline;
+  left: 0;
+}
+
+.buttom-right {
+  bottom: 0;
+  position: absolute;
+  right: 0;
+  background-color: #006464 !important;
+  padding: 2em 4em;
+  border-radius: 1em 0em 1em 0em !important;
+}
+
+:host ::ng-deep .p-steps .p-steps-item.p-highlight .p-steps-number {
+  background-color: #00c8b0 !important;
+}
