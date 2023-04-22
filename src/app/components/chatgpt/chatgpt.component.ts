@@ -2,10 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from 'openai';
 import { ActivatedRoute } from '@angular/router';
 import { AnimationOptions } from 'ngx-lottie';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
 import { DevModeService } from 'src/app/services/devMode.service';
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
+import { WhatsappImportComponent } from '../whatsapp-import/whatsapp-import.component';
+
 @Component({
   selector: 'app-chatgpt',
   templateUrl: './chatgpt.component.html',
@@ -14,7 +16,6 @@ import { SettingsService } from 'src/app/services/settings.service';
 export class ChatgptComponent implements OnInit {
   message = '';
   chatHistory = [];
-  openAi: OpenAIApi;
   isLoading = false;
 
   config = {
@@ -31,32 +32,64 @@ export class ChatgptComponent implements OnInit {
   callFirstTime: boolean = false;
   profileData;
   itemsSubMenu: MenuItem[];
+  overlayVisible: boolean = false;
+  showWhatsappImport = false;
 
-  constructor(private route: ActivatedRoute, public svDvMod: DevModeService, public svDataInfo: DataInfoService, private sttgs: SettingsService) {
+  constructor(private route: ActivatedRoute, public svDvMod: DevModeService, public dataInfSv: DataInfoService, private sttgs: SettingsService) {
     this.devMode();
     this.moldProfile();
     this.initializeSubMenu();
   }
 
+  ngOnInit(): void {
+    this.loadChatHistory();
+
+    this.dataInfSv.setOnConversationImportedCallback(() => {
+      this.importedConversation();
+    });
+  }
+
+  importedConversation(): void {
+    // Encuentra el índice del primer mensaje de usuario o bot en la conversación
+    const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
+
+    // Si no se encuentra el primer mensaje, asume que el índice es 0
+    const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
+
+    // Inserta el mensaje de introducción de personalidad en la posición correcta
+    this.chatHistory.splice(insertIndex, 0, {
+      message: '########## Take this conversation as context and acquire this personality: ' + this.dataInfSv.converWhatsapp + ' ##########',
+      type: 'bot',
+    });
+
+    // Añade el mensaje de importación de la conversación de WhatsApp
+    this.chatHistory.push({
+      message: 'Se ha importado una conversación de WhatsApp.',
+      type: 'bot',
+    });
+
+    this.saveChatHistory();
+    this.showWhatsappImport = false;
+  }
+
+  toggle() {
+    this.overlayVisible = !this.overlayVisible;
+  }
+
   initializeSubMenu() {
     this.itemsSubMenu = [
       {
-        label: 'Update',
-        icon: 'pi pi-refresh',
-        command: () => {
-          // this.update();
-        },
+        label: 'Options',
+        items: [
+          {
+            label: 'Whatsapp Import',
+            icon: 'pi pi-refresh',
+            command: () => {
+              this.showWhatsappImport = true;
+            },
+          },
+        ],
       },
-      {
-        label: 'Delete',
-        icon: 'pi pi-times',
-        command: () => {
-          // this.delete();
-        },
-      },
-      { label: 'Angular.io', icon: 'pi pi-info', url: 'http://angular.io' },
-      { separator: true },
-      { label: 'Setup', icon: 'pi pi-cog', routerLink: ['/setup'] },
     ];
   }
 
@@ -70,23 +103,11 @@ export class ChatgptComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.loadChatGPT();
-    this.loadChatHistory();
-  }
-
-  loadChatGPT() {
-    const apiKey = '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';
-    this.openAi = this.createOpenAiClient(apiKey);
-  }
-
-  createOpenAiClient(apiKey: string): OpenAIApi {
-    const configuration = new Configuration({ apiKey });
-    return new OpenAIApi(configuration);
-  }
-
   saveChatHistory(): void {
     localStorage.setItem('chatHistory', JSON.stringify(this.chatHistory));
+    // show message chat history saved
+
+    console.log('🚀 ~ ChatgptComponent ~ saveChatHistory ~ this.chatHistory:', this.chatHistory);
   }
 
   async callChatGpt(): Promise<void> {
@@ -104,22 +125,22 @@ export class ChatgptComponent implements OnInit {
       inputText = this.message;
     }
 
-    console.log('🚀 ~ ChatgptComponent ~ callChatGpt ~ inputText:', inputText);
+    // console.log('🚀 ~ ChatgptComponent ~ callChatGpt ~ inputText:', inputText);
 
-    const response = await this.openAi.createChatCompletion({
-      model,
-      messages: [
-        {
-          role: this.sttgs.role as ChatCompletionRequestMessageRoleEnum,
-          content: inputText,
-        },
-      ],
-    });
+    // const response = await this.sttgs.openAi.createChatCompletion({
+    //   model,
+    //   messages: [
+    //     {
+    //       role: this.sttgs.role as ChatCompletionRequestMessageRoleEnum,
+    //       content: inputText,
+    //     },
+    //   ],
+    // });
 
-    const chatResponse = response.data.choices[0].message.content;
-    this.svDataInfo.getTokensUsedCost(response.data.usage.total_tokens);
+    // const chatResponse = response.data.choices[0].message.content;
+    // this.dataInfSv.getTokensUsedCost(response.data.usage.total_tokens);
 
-    await this.callBot(inputText, chatResponse);
+    // await this.callBot(inputText, chatResponse);
 
     this.isLoading = false;
   }

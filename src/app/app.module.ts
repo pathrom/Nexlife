@@ -19,11 +19,12 @@ import { DataInfoService } from './services/dataInfo.service';
 import { DevModeService } from './services/devMode.service';
 import { SettingsService } from './services/settings.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { WhatsappParserService } from './services/whatsapp-parser.service';
 
 @NgModule({
   declarations: [AppComponent, ChatgptComponent, PrivacyPolicyComponent, HomeComponent, FormInitialComponent, WhatsappImportComponent, DevModeComponent],
   imports: [BrowserModule, BrowserAnimationsModule, AppRoutingModule, FormsModule, CommonModule, SharedModule, AppLayoutModule],
-  providers: [AuthenticationService, SweetAlert2Module, DataInfoService, DevModeService, SettingsService, MessageService],
+  providers: [AuthenticationService, SweetAlert2Module, DataInfoService, DevModeService, SettingsService, MessageService, WhatsappParserService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

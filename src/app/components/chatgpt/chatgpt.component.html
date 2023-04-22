@@ -11,10 +11,11 @@
         'bot-message': item.type === 'bot'
       }"
     >
-      <div class="message">
+      <div class="message" *ngIf="item.message?.trim() !== ''">
         {{ item.message }}
       </div>
     </div>
+
     <div class="loading-indicator" *ngIf="isLoading">
       <div class="dot"></div>
       <div class="dot"></div>
@@ -26,15 +27,14 @@
       <div class="p-inputgroup">
         <input type="text" pInputText [(ngModel)]="message" (keyup.enter)="callChatGpt()" placeholder="Write your message..." />
         <button type="button" pButton icon="pi pi-send" class="sendButton" (click)="callChatGpt()"></button>
-        <button type="button" pButton icon="pi pi-ellipsis-v" class="sendButton" (click)="resetHistoryChat()"></button>
 
-        <div class="card flex justify-content-center">
-          <p-toast></p-toast>
-          <p-splitButton label="Save" icon="pi pi-plus" [model]="itemsSubMenu"></p-splitButton>
-        </div>
+        <p-toast></p-toast>
+        <p-menu #menu [model]="itemsSubMenu" [popup]="true" [appendTo]="'body'" [baseZIndex]="10000"></p-menu>
+        <button pButton type="button" (click)="menu.toggle($event)" icon="pi pi-ellipsis-v" class="elipsisButton"></button>
       </div>
     </div>
   </div>
 
   <app-dev-mode></app-dev-mode>
+  <app-whatsapp-import *ngIf="showWhatsappImport" (close)="showWhatsappImport = false"></app-whatsapp-import>
 </div>

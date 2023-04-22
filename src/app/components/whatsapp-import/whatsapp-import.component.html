@@ -1,1 +1,10 @@
-<p>whatsapp-import works!</p>
+<p-dialog header="Select a person" [(visible)]="displayDialog" [modal]="true" class="dialog" [baseZIndex]="10000">
+  <ng-container *ngFor="let person of people">
+    <button pButton type="button" (click)="filterMessagesByPerson(person)" [label]="person"></button>
+  </ng-container>
+</p-dialog>
+
+<div class="card flex justify-content-center">
+  <p-toast></p-toast>
+  <p-fileUpload mode="basic" chooseLabel="Choose" name="demo[]" url="https://www.primefaces.org/cdn/api/upload.php" accept="text/*" [maxFileSize]="1000000" (onUpload)="onUpload($event)"></p-fileUpload>
+</div>

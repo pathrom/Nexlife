@@ -16,7 +16,6 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { TieredMenuModule } from 'primeng/tieredmenu';
 import { SidebarModule } from 'primeng/sidebar';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
-import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { PanelMenuModule } from 'primeng/panelmenu';
 import { MenuModule } from 'primeng/menu';
@@ -59,7 +58,6 @@ const PrimeNG = [
   TieredMenuModule,
   SidebarModule,
   OverlayPanelModule,
-  AvatarModule,
   AvatarGroupModule,
   PanelMenuModule,
   MenuModule,
