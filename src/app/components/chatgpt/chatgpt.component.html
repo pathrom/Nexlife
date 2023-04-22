@@ -1,20 +1,22 @@
 <div class="chat-container">
-  <div class="chat-history">
+  <div class="chat-history" #messageContainer>
     <div *ngIf="!callFirstTime" class="containerLottie">
       <ng-lottie containerClass="moving-box another-class" [styles]="styles" [options]="options"></ng-lottie>
     </div>
 
-    <div
-      *ngFor="let item of chatHistory"
-      [ngClass]="{
-        'user-message': item.type === 'user',
-        'bot-message': item.type === 'bot'
-      }"
-    >
-      <div class="message" *ngIf="item.message?.trim() !== ''">
-        {{ item.message }}
+    <ng-container *ngFor="let item of chatHistory">
+      <div
+        *ngIf="!item.hidden"
+        [ngClass]="{
+          'user-message': item.type === 'user',
+          'bot-message': item.type === 'bot'
+        }"
+      >
+        <div class="message" *ngIf="item.message?.trim() !== ''">
+          {{ item.message }}
+        </div>
       </div>
-    </div>
+    </ng-container>
 
     <div class="loading-indicator" *ngIf="isLoading">
       <div class="dot"></div>
@@ -26,7 +28,7 @@
     <div class="card flex flex-column md:flex-row gap-3">
       <div class="p-inputgroup">
         <input type="text" pInputText [(ngModel)]="message" (keyup.enter)="callChatGpt()" placeholder="Write your message..." />
-        <button type="button" pButton icon="pi pi-send" class="sendButton" (click)="callChatGpt()"></button>
+        <button type="button" pButton icon="pi pi-send" class="sendButton" (click)="callChatGpt()" [ngClass]="{ 'ui-state-disabled': isLoading }" [disabled]="isLoading"></button>
 
         <p-toast></p-toast>
         <p-menu #menu [model]="itemsSubMenu" [popup]="true" [appendTo]="'body'" [baseZIndex]="10000"></p-menu>

@@ -56,12 +56,42 @@ export class WhatsappImportComponent {
       const noEmailContent = cleanedContent.replace(emailRegex, '');
 
       // Eliminar mensajes que contentgan esto
-      const multimediaRegex = /<Multimedia omitido>|Videollamada grupal perdida|Llamada perdida/g;
+      const multimediaRegex = /<Multimedia omitido>|Videollamada grupal perdida|Llamada grupal perdida|Llamada perdida|Videollamada perdida|Se eliminó este mensaje./g;
       const noMultimediaContent = noEmailContent.replace(multimediaRegex, '');
 
       // Eliminar elementos de fecha, hora y remitente
+      const dateRegex = /\\d{1,2}\/\\d{1,2}\/\\d{2,4}, \\d{1,2}:\\d{2} (?:AM|PM) - /g;
+      const noDateContent = noMultimediaContent.replace(dateRegex, '');
+
+      // Eliminar espacios en blanco al principio y al final
+      const trimmedContent = noDateContent.trim();
+
+      // Eliminar líneas vacías
+      const noEmptyLinesContent = trimmedContent.replace(/\\n\\n/g, '\\n');
+
+      // Eliminar espacios en blanco adicionales
+      const noExtraSpacesContent = noEmptyLinesContent.replace(/\\n\\s+/g, '\\n');
+
+      //  Eliminar emojis
+      const emojiRegex = /\\p{Emoji}/g;
+      const noEmojiContent = noExtraSpacesContent.replace(emojiRegex, '');
+
+      // Eliminar texto que no es alfanumérico
+      const noAlphaNumericContent = noEmojiContent.replace(/[^a-zA-Z0-9\\s]/g, '');
+
+      // Eliminar texto de 1 caracter
+      const noOneCharContent = noAlphaNumericContent.replace(/\\b\\w{1}\\b/g, '');
+
+      // Eliminar texto de 2 caracteres
+      const noTwoCharContent = noOneCharContent.replace(/\\b\\w{2}\\b/g, '');
+
+      // Eliminar líneas que contengan solo números
+      const noNumberContent = noTwoCharContent.replace(/\\b\\d+\\b/g, '');
+
+      // Obtener modismos y su frecuencia
+
       return {
-        content: noMultimediaContent,
+        content: noNumberContent,
       };
     });
 
@@ -70,20 +100,21 @@ export class WhatsappImportComponent {
 
     await this.filterAndSumarize();
     await this.sendToIndoSaveService();
-    await this.showCostAndCharacterCount(); // Mostrar el conteo de caracteres y el costo
+    // await this.showCostAndCharacterCount(); // Mostrar el conteo de caracteres y el costo
   }
 
   async filterAndSumarize() {
     const messages = this.messages.map((message) => message.content);
     const phraseOccurrences = this.countPhraseOccurrences(messages);
+    console.log('🚀 ~ WhatsappImportComponent ~ filterAndSumarize ~ phraseOccurrences:', phraseOccurrences);
     const totalMessages = messages.length;
 
-    const summarizedText = await this.summarizeText(messages.join('\n'));
+    // const summarizedText = await this.summarizeText(messages.join('\n'));
 
     const weightedPhrases = this.getWeightedPhrases(phraseOccurrences, totalMessages);
+    console.log('🚀 ~ WhatsappImportComponent ~ filterAndSumarize ~ weightedPhrases:', weightedPhrases);
 
-    const formattedText = `Conversation summary:\n${summarizedText}\n\nCommon phrases and their frequency:\n${weightedPhrases.join('\n')}`;
-
+    const formattedText = `Common phrases and their frequency:\n${weightedPhrases.join('\n')}`;
     this.messages = formattedText.split('\n');
     console.log('🚀 ~ WhatsappImportComponent ~ filterAndSumarize ~ this.messages:', this.messages);
   }
@@ -96,7 +127,8 @@ export class WhatsappImportComponent {
       }))
       .sort((a, b) => b.weight - a.weight);
 
-    return weightedPhrases.map((entry) => `${entry.phrase} (frequency: ${entry.weight.toFixed(2)})`);
+    // return weightedPhrases.map((entry) => `${entry.phrase} (frequency: ${entry.weight.toFixed(3)})`);
+    return weightedPhrases.map((entry) => `${entry.phrase}`);
   }
 
   countPhraseOccurrences(messages: string[]): Map<string, number> {
@@ -139,20 +171,22 @@ export class WhatsappImportComponent {
   }
 
   showCostAndCharacterCount() {
-    const characterCount = this.messages.reduce((count, message) => count + message.content.length, 0);
-    const tokenCount = Math.ceil(characterCount / 700); // asumimos que 700 caracteres son 1000 tokens
-    const costPer1000Tokens = 0.002; // 0.002 centimos por 1000 tokens
-    const cost = tokenCount * costPer1000Tokens;
+    if (this.messages) {
+      const characterCount = this.messages.reduce((count, message) => count + message.content.length, 0);
+      const tokenCount = Math.ceil(characterCount / 700); // asumimos que 700 caracteres son 1000 tokens
+      const costPer1000Tokens = 0.002; // 0.002 centimos por 1000 tokens
+      const cost = tokenCount * costPer1000Tokens;
 
-    // Mostrar el conteo de caracteres y el costo en un mensaje emergente
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Character Count and Cost',
-      detail: `Total characters: ${characterCount}, Cost: €${cost.toFixed(4)}`,
-    });
+      // Mostrar el conteo de caracteres y el costo en un mensaje emergente
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Character Count and Cost',
+        detail: `Total characters: ${characterCount}, Cost: €${cost.toFixed(4)}`,
+      });
 
-    // Mostrar el conteo de caracteres y el costo en la consola
-    console.log(`Total characters: ${characterCount}, Cost: €${cost.toFixed(4)}`);
-    this.dataInfSv.getTokensUsedCost(tokenCount);
+      // Mostrar el conteo de caracteres y el costo en la consola
+      console.log(`Total characters: ${characterCount}, Cost: €${cost.toFixed(4)}`);
+      this.dataInfSv.getTokensUsedCost(tokenCount);
+    }
   }
 }

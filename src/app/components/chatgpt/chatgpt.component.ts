@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from 'openai';
 import { ActivatedRoute } from '@angular/router';
 import { AnimationOptions } from 'ngx-lottie';
@@ -13,10 +13,11 @@ import { WhatsappImportComponent } from '../whatsapp-import/whatsapp-import.comp
   templateUrl: './chatgpt.component.html',
   styleUrls: ['./chatgpt.component.scss'],
 })
-export class ChatgptComponent implements OnInit {
+export class ChatgptComponent implements OnInit, AfterViewInit {
+  @ViewChild('messageContainer') private messageContainer: ElementRef;
   message = '';
   chatHistory = [];
-  isLoading = false;
+  isLoading = true;
 
   config = {
     enableContextHistoryChat: true,
@@ -49,6 +50,20 @@ export class ChatgptComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
+    setTimeout(() => {
+      if (this.messageContainer) {
+        const messageContainerElement = this.messageContainer.nativeElement;
+        messageContainerElement.scrollTop = messageContainerElement.scrollHeight;
+        this.isLoading = false;
+      }
+    }, 100); // Puedes ajustar este valor si es necesario
+  }
+
   importedConversation(): void {
     // Encuentra el índice del primer mensaje de usuario o bot en la conversación
     const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
@@ -58,14 +73,9 @@ export class ChatgptComponent implements OnInit {
 
     // Inserta el mensaje de introducción de personalidad en la posición correcta
     this.chatHistory.splice(insertIndex, 0, {
-      message: '########## Take this conversation as context and acquire this personality: ' + this.dataInfSv.converWhatsapp + ' ##########',
+      message: '##########\nTake this conversation as context and acquire this personality based on the frequency of words this person uses and try to imitate them as well as possible:\n' + this.dataInfSv.converWhatsapp + '\n##########',
       type: 'bot',
-    });
-
-    // Añade el mensaje de importación de la conversación de WhatsApp
-    this.chatHistory.push({
-      message: 'Se ha importado una conversación de WhatsApp.',
-      type: 'bot',
+      hidden: true, // Agrega esta línea
     });
 
     this.saveChatHistory();
@@ -110,38 +120,54 @@ export class ChatgptComponent implements OnInit {
     console.log('🚀 ~ ChatgptComponent ~ saveChatHistory ~ this.chatHistory:', this.chatHistory);
   }
 
-  async callChatGpt(): Promise<void> {
-    this.isLoading = true;
-    this.callFirstTime = true;
-    let inputText = '';
-    const model = this.sttgs.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
+  mapChatHistoryToRole(): any[] {
+    return this.chatHistory.map((item) => ({
+      role: item.type === 'user' ? ChatCompletionRequestMessageRoleEnum.User : ChatCompletionRequestMessageRoleEnum.Assistant,
+      content: item.message,
+    }));
+  }
 
+  formatInputMessage(): string {
     if (this.chatHistory && this.chatHistory.length > 0) {
       let context = this.chatHistory.map((item) => item.message).join(' ');
-      inputText = `Situation: This is a conversation that we are going to have to simulate the following Profile, I want your output to be without annotations typical of a computer system "Response", simply return me a text answering as the simulated person, Acquires a personality with the different data: ${JSON.stringify(
+      return `Situation: This is a conversation that we are going to have to simulate the following Profile, I want your output to be without annotations typical of a computer system "Response", simply return me a text answering as the simulated person, Acquires a personality with the different data: ${JSON.stringify(
         this.profileData
       )} \n ---------------------  \n Context: ${context} \n ---------------------  \n Message: ${this.message} \n ---------------------  \n  Intructions: No more than 150 characters`;
     } else {
-      inputText = this.message;
+      return this.message;
     }
+  }
 
-    // console.log('🚀 ~ ChatgptComponent ~ callChatGpt ~ inputText:', inputText);
+  async callChatGpt(): Promise<void> {
+    // Añade esta línea para agregar el mensaje del usuario al historial de la conversación
+    this.chatHistory.push({ message: this.message, type: 'user' });
 
-    // const response = await this.sttgs.openAi.createChatCompletion({
-    //   model,
-    //   messages: [
-    //     {
-    //       role: this.sttgs.role as ChatCompletionRequestMessageRoleEnum,
-    //       content: inputText,
-    //     },
-    //   ],
-    // });
+    this.isLoading = true;
+    this.callFirstTime = true;
+    const model = this.sttgs.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
 
-    // const chatResponse = response.data.choices[0].message.content;
-    // this.dataInfSv.getTokensUsedCost(response.data.usage.total_tokens);
+    let inputText = '';
 
-    // await this.callBot(inputText, chatResponse);
+    inputText = this.formatInputMessage();
 
+    const response = await this.sttgs.openAi.createChatCompletion({
+      model: model,
+      messages: [
+        {
+          role: ChatCompletionRequestMessageRoleEnum.System,
+          content: inputText,
+        },
+        ...this.mapChatHistoryToRole(),
+      ],
+    });
+
+    const chatResponse = response.data.choices[0].message.content;
+    this.chatHistory.push({ message: chatResponse, type: 'bot' });
+    this.scrollToBottom(); // Agrega esta línea aquí
+    console.log('\n' + chatResponse + '\n');
+    this.dataInfSv.getTokensUsedCost(response.data.usage.total_tokens);
+    this.saveChatHistory(); // Guardar la conversación en LocalStorage
+    this.message = '';
     this.isLoading = false;
   }
 
@@ -155,26 +181,6 @@ export class ChatgptComponent implements OnInit {
         this.callFirstTime = true;
       }
     }
-  }
-
-  async callBot(inputText: string, chatResponse: string): Promise<void> {
-    console.log(chatResponse);
-    let userMessage = {};
-
-    if (this.chatHistory.length > 0) {
-      userMessage = { message: this.message, response: '', type: 'user' };
-    } else {
-      userMessage = { message: inputText, response: '', type: 'user' };
-    }
-
-    const botMessage = { message: chatResponse, response: '', type: 'bot' };
-
-    this.chatHistory.push(userMessage);
-    this.chatHistory.push(botMessage);
-    this.saveChatHistory(); // Guardar la conversación en LocalStorage
-
-    this.message = '';
-    // await this.speakText(chatResponse);
   }
 
   async speakText(text: string): Promise<void> {
