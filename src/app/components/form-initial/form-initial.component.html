@@ -5,32 +5,30 @@
 </div>
 
 <p-card>
-  <div *ngIf="activeIndex == 0">Vamos a crear tu avatar y necesitamos la máxima información posible para darle una personalidad acorder a lo que buscas.</div>
+  <div *ngIf="activeIndex == 0" class="mb-5">We are going to create your avatar and we need as much information as possible to give it a personality according to what you are looking for.</div>
 
   <form [formGroup]="myForm" (ngSubmit)="onSubmit()" class="p-fluid mt-3">
     <div *ngIf="activeIndex == 0">
       <div class="p-field">
-        <label for="nombre">Nombre:</label>
-        <input id="nombre" type="text" pInputText formControlName="nombre" />
+        <input id="name" type="text" pInputText formControlName="name" placeholder="Name" />
       </div>
       <div class="p-field">
-        <label for="apellido">Apellido:</label>
-        <input id="apellido" type="text" pInputText formControlName="apellido" />
+        <input id="surname" type="text" pInputText formControlName="surname" placeholder="Surname" />
       </div>
     </div>
     <div *ngIf="activeIndex == 1">
       <div class="p-field">
-        <label for="email">Correo electrónico:</label>
-        <input id="email" type="email" pInputText formControlName="email" />
+        <input id="email" type="email" pInputText formControlName="email" placeholder="Email" />
       </div>
+    </div>
+    <div *ngIf="activeIndex == 2">
       <div class="p-field">
-        <label for="pais">País:</label>
-        <p-dropdown id="pais" [options]="paises" formControlName="pais"></p-dropdown>
+        <p-dropdown id="country" [options]="paises" formControlName="country" placeholder="Country:"></p-dropdown>
       </div>
     </div></form
 ></p-card>
 
 <div>
-  <button *ngIf="activeIndex != 0" (click)="nextStep()" pButton class="buttom-left" label="Back"></button>
-  <button (click)="backStep()" pButton class="buttom-right" label="Next"></button>
+  <button *ngIf="activeIndex != 0" (click)="backStep()" pButton class="buttom-left" label="Back"></button>
+  <button (click)="nextStep()" pButton class="buttom-right" label="Next"></button>
 </div>

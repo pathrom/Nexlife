@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  ChatCompletionRequestMessageRoleEnum,
-  Configuration,
-  OpenAIApi,
-} from 'openai';
+import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from 'openai';
 import { ActivatedRoute } from '@angular/router';
 import { AnimationOptions } from 'ngx-lottie';
+import { MenuItem } from 'primeng/api';
+import { DevModeService } from 'src/app/services/devMode.service';
+import { DataInfoService } from 'src/app/services/dataInfo.service';
+import { SettingsService } from 'src/app/services/settings.service';
 @Component({
   selector: 'app-chatgpt',
   templateUrl: './chatgpt.component.html',
@@ -16,29 +16,68 @@ export class ChatgptComponent implements OnInit {
   chatHistory = [];
   openAi: OpenAIApi;
   isLoading = false;
-  costMsg = '';
-  versionGPT = '3';
-  isDevMode: boolean = false;
-  role: string = 'user'; // system, user
+
   config = {
     enableContextHistoryChat: true,
   };
   options: AnimationOptions = {
     path: '/assets/lotties/load.json',
   };
+
   styles: Partial<CSSStyleDeclaration> = {
     width: '40vw',
   };
-  callFirstTime: boolean = false;
 
-  constructor(private route: ActivatedRoute) {
+  callFirstTime: boolean = false;
+  profileData;
+  itemsSubMenu: MenuItem[];
+
+  constructor(private route: ActivatedRoute, public svDvMod: DevModeService, public svDataInfo: DataInfoService, private sttgs: SettingsService) {
     this.devMode();
+    this.moldProfile();
+    this.initializeSubMenu();
+  }
+
+  initializeSubMenu() {
+    this.itemsSubMenu = [
+      {
+        label: 'Update',
+        icon: 'pi pi-refresh',
+        command: () => {
+          // this.update();
+        },
+      },
+      {
+        label: 'Delete',
+        icon: 'pi pi-times',
+        command: () => {
+          // this.delete();
+        },
+      },
+      { label: 'Angular.io', icon: 'pi pi-info', url: 'http://angular.io' },
+      { separator: true },
+      { label: 'Setup', icon: 'pi pi-cog', routerLink: ['/setup'] },
+    ];
+  }
+
+  moldProfile() {
+    this.route.queryParams.subscribe((params) => {
+      if (params['profileData']) {
+        this.profileData = JSON.parse(params['profileData']);
+
+        console.log(this.profileData);
+      }
+    });
   }
 
   ngOnInit(): void {
+    this.loadChatGPT();
+    this.loadChatHistory();
+  }
+
+  loadChatGPT() {
     const apiKey = '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';
     this.openAi = this.createOpenAiClient(apiKey);
-    this.loadChatHistory();
   }
 
   createOpenAiClient(apiKey: string): OpenAIApi {
@@ -54,15 +93,13 @@ export class ChatgptComponent implements OnInit {
     this.isLoading = true;
     this.callFirstTime = true;
     let inputText = '';
-    const model = this.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
+    const model = this.sttgs.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
 
     if (this.chatHistory && this.chatHistory.length > 0) {
       let context = this.chatHistory.map((item) => item.message).join(' ');
-      inputText =
-        'Context: ' +
-        context +
-        ' --------------------- Message: ' +
-        this.message;
+      inputText = `Situation: This is a conversation that we are going to have to simulate the following Profile, I want your output to be without annotations typical of a computer system "Response", simply return me a text answering as the simulated person, Acquires a personality with the different data: ${JSON.stringify(
+        this.profileData
+      )} \n ---------------------  \n Context: ${context} \n ---------------------  \n Message: ${this.message} \n ---------------------  \n  Intructions: No more than 150 characters`;
     } else {
       inputText = this.message;
     }
@@ -73,32 +110,23 @@ export class ChatgptComponent implements OnInit {
       model,
       messages: [
         {
-          role: this.role as ChatCompletionRequestMessageRoleEnum,
+          role: this.sttgs.role as ChatCompletionRequestMessageRoleEnum,
           content: inputText,
         },
       ],
     });
 
     const chatResponse = response.data.choices[0].message.content;
-    this.getTokensUsedCost(response.data.usage.total_tokens);
+    this.svDataInfo.getTokensUsedCost(response.data.usage.total_tokens);
 
     await this.callBot(inputText, chatResponse);
 
     this.isLoading = false;
   }
 
-  getTokensUsedCost(tokensUsed: number): void {
-    const COST_PER_TOKEN = this.versionGPT === '4' ? 0.00008 : 0.000002;
-    const cost = tokensUsed * COST_PER_TOKEN;
-    this.costMsg = `Tokens used: ${tokensUsed} \n Cost: ${cost.toFixed(4)}`;
-  }
-
   loadChatHistory(): void {
     let storedChatHistory = localStorage.getItem('chatHistory');
-    console.log(
-      '🚀 ~ ChatgptComponent ~ loadChatHistory ~ storedChatHistory:',
-      storedChatHistory
-    );
+    console.log('🚀 ~ ChatgptComponent ~ loadChatHistory ~ storedChatHistory:', storedChatHistory);
 
     if (storedChatHistory && storedChatHistory !== '[]') {
       if (this.config.enableContextHistoryChat === true) {
@@ -139,25 +167,15 @@ export class ChatgptComponent implements OnInit {
   }
 
   devMode() {
-    console.log(
-      '🚀 ~ ChatgptComponent ~ devMode ~ this.route.snapshot:',
-      this.route.snapshot
-    );
+    console.log('🚀 ~ ChatgptComponent ~ devMode ~ this.route.snapshot:', this.route.snapshot);
     if (this.route.snapshot.queryParamMap.get('devMode')) {
       console.log('Yes devMode');
-      this.isDevMode = true;
+      this.svDvMod.isDevMode = true;
     } else {
       console.log('No devMode');
     }
   }
 
-  changeVersionChatGPT(version: string): void {
-    console.log(
-      '🚀 ~ ChatgptComponent ~ changeVersionChatGPT ~ version:',
-      version
-    );
-    this.versionGPT = version;
-  }
   resetHistoryChat(): void {
     localStorage.removeItem('chatHistory');
     this.chatHistory = [];

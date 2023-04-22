@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SelectItem } from 'primeng/api';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-form-initial',
@@ -14,14 +16,12 @@ export class FormInitialComponent implements OnInit {
   myForm: FormGroup;
   paises: SelectItem[];
 
-  constructor(private fb: FormBuilder) {
-    this.myForm = this.fb.group({
-      nombre: ['', Validators.required],
-      apellido: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      pais: ['', Validators.required],
-    });
+  constructor(private fb: FormBuilder, private router: Router) {
+    this.setLanguages();
+    this.initializeForm();
+  }
 
+  setLanguages() {
     this.paises = [
       { label: 'Selecciona un país', value: null },
       {
@@ -35,15 +35,31 @@ export class FormInitialComponent implements OnInit {
     ];
   }
 
-  ngOnInit() {
-    this.items = [{ label: '' }, { label: '' }, { label: '' }, { label: '' }];
+  initializeForm() {
+    this.myForm = this.fb.group({
+      name: ['', Validators.required],
+      surname: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      country: ['', Validators.required],
+    });
   }
+
+  ngOnInit() {
+    this.items = [{ label: '' }, { label: '' }, { label: '' }];
+  }
+
   onSubmit() {
     if (this.myForm.valid) {
-      console.log('Formulario enviado:', this.myForm.value);
-      // Aquí puedes agregar la lógica para manejar el envío de los datos del formulario
+      Swal.fire(' ', 'Welcome to the chat', 'success').then(() => {
+        this.router.navigate(['/chat'], { queryParams: { profileData: JSON.stringify(this.myForm.value) } });
+      });
+
+      setTimeout(() => {
+        this.router.navigate(['/chat'], { queryParams: { profileData: JSON.stringify(this.myForm.value) } });
+      }, 4000);
     } else {
       console.log('Formulario inválido');
+      Swal.fire('Invalid Form', '', 'error');
     }
   }
 
@@ -53,6 +69,22 @@ export class FormInitialComponent implements OnInit {
   }
 
   nextStep() {
+    if (this.activeIndex == 0 && this.myForm.controls['name'].invalid && this.myForm.controls['surname'].invalid) {
+      Swal.fire('Name/Surname Invalid', '', 'error');
+      return;
+    }
+    if (this.activeIndex == 1 && this.myForm.controls['email'].invalid) {
+      Swal.fire('Email Invalid', '', 'error');
+      return;
+    }
+    if (this.activeIndex == 2 && this.myForm.controls['country'].invalid) {
+      Swal.fire('Country Invalid', '', 'error');
+      return;
+    }
     this.activeIndex = this.activeIndex + 1;
+
+    if (this.activeIndex == 3) {
+      this.onSubmit();
+    }
   }
 }

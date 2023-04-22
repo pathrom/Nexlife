@@ -1,11 +1,7 @@
 <div class="chat-container">
   <div class="chat-history">
     <div *ngIf="!callFirstTime" class="containerLottie">
-      <ng-lottie
-        containerClass="moving-box another-class"
-        [styles]="styles"
-        [options]="options"
-      ></ng-lottie>
+      <ng-lottie containerClass="moving-box another-class" [styles]="styles" [options]="options"></ng-lottie>
     </div>
 
     <div
@@ -28,42 +24,17 @@
   <div class="chat-input">
     <div class="card flex flex-column md:flex-row gap-3">
       <div class="p-inputgroup">
-        <input
-          type="text"
-          pInputText
-          [(ngModel)]="message"
-          (keyup.enter)="callChatGpt()"
-          placeholder="Write your message..."
-        />
-        <button
-          type="button"
-          pButton
-          icon="pi pi-send"
-          class="sendButton"
-          (click)="callChatGpt()"
-        ></button>
+        <input type="text" pInputText [(ngModel)]="message" (keyup.enter)="callChatGpt()" placeholder="Write your message..." />
+        <button type="button" pButton icon="pi pi-send" class="sendButton" (click)="callChatGpt()"></button>
+        <button type="button" pButton icon="pi pi-ellipsis-v" class="sendButton" (click)="resetHistoryChat()"></button>
+
+        <div class="card flex justify-content-center">
+          <p-toast></p-toast>
+          <p-splitButton label="Save" icon="pi pi-plus" [model]="itemsSubMenu"></p-splitButton>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="devModeZone">
-    <div *ngIf="isDevMode" class="costTokens">{{ costMsg }}</div>
-
-    <div *ngIf="isDevMode">
-      <p-button
-        label="Change Version Chat GPT 3"
-        (onClick)="changeVersionChatGPT('3')"
-      ></p-button>
-
-      <p-button
-        label="Change Version Chat GPT 4"
-        (onClick)="changeVersionChatGPT('4')"
-      ></p-button>
-
-      <p-button
-        label="Reset History Chat"
-        (onClick)="resetHistoryChat()"
-      ></p-button>
-    </div>
-  </div>
+  <app-dev-mode></app-dev-mode>
 </div>

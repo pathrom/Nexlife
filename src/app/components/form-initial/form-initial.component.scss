@@ -21,3 +21,15 @@
 :host ::ng-deep .p-steps .p-steps-item.p-highlight .p-steps-number {
   background-color: #00c8b0 !important;
 }
+
+.p-field {
+  margin-bottom: 1em !important;
+}
+
+:host ::ng-deep .p-card .p-card-content {
+  justify-content: normal !important;
+}
+
+:host ::ng-deep .p-dropdown-label {
+  text-align: left;
+}
