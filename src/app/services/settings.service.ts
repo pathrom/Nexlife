@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
-import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from 'openai';
+import { OpenAIService } from './openai.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SettingsService {
-  constructor() {
-    this.loadChatGPT();
+  constructor(private openAiSv: OpenAIService) {
+    this.openAiSv.loadChatGPT();
   }
+
   // gpt-4, gpt-4-0314, gpt-4-32k, gpt-4-32k-0314, gpt-3.5-turbo, gpt-3.5-turbo-0301
   versionGPT = '3';
   role: string = 'user'; // system, user
-  openAi: OpenAIApi;
   numLettersChat = 100;
 
   changeVersionChatGPT(version: string): void {
@@ -19,13 +19,11 @@ export class SettingsService {
     this.versionGPT = version;
   }
 
-  loadChatGPT() {
-    const apiKey = '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';
-    this.openAi = this.createOpenAiClient(apiKey);
-  }
+  getTokensUsedCost(tokensUsed: number): void {
+    const COST_PER_TOKEN = this.versionGPT === '4' ? 0.00008 : 0.000002;
+    const cost = tokensUsed * COST_PER_TOKEN;
+    const costMsg = `Tokens used: ${tokensUsed} \n Cost: ${cost.toFixed(4)}`;
 
-  createOpenAiClient(apiKey: string): OpenAIApi {
-    const configuration = new Configuration({ apiKey });
-    return new OpenAIApi(configuration);
+    console.log('🚀 ~ SettingsService ~ getTokensUsedCost ~ costMsg:', costMsg);
   }
 }

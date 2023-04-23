@@ -1,6 +1,6 @@
 <p-dialog header="Select a person" [(visible)]="displayDialog" [modal]="true" class="dialog" [baseZIndex]="10000">
   <ng-container *ngFor="let person of people">
-    <button pButton type="button" (click)="filterMessagesByPerson(person)" [label]="person"></button>
+    <button pButton type="button" (click)="processImportWhatsapp(person)" [label]="person"></button>
   </ng-container>
 </p-dialog>
 

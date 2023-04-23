@@ -74,44 +74,6 @@
   font-family: "Montserrat", system-ui;
 }
 
-.loading-indicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  top: 75vh;
-  left: 43vw;
-  margin: 0 auto;
-  position: absolute;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #1976d2;
-  margin: 0 4px;
-  animation: loading 1s infinite;
-
-  &:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-
-  &:nth-child(3) {
-    animation-delay: 0.4s;
-  }
-}
-
-@keyframes loading {
-  0%,
-  80%,
-  100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-8px);
-  }
-}
-
 .message-input {
   width: 100%;
 }
@@ -119,10 +81,6 @@
 .send-button {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-}
-.containerLottie {
-  text-align: -webkit-center;
-  margin-top: 25vh;
 }
 
 :host ::ng-deep .p-button {

@@ -1,13 +1,14 @@
+import { LoadingService } from 'src/app/services/loading.service';
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from 'openai';
 import { ActivatedRoute } from '@angular/router';
-import { AnimationOptions } from 'ngx-lottie';
 import { MenuItem, MessageService } from 'primeng/api';
 import { DevModeService } from 'src/app/services/devMode.service';
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
 import { WhatsappImportComponent } from '../whatsapp-import/whatsapp-import.component';
 import { Profile } from 'src/app/models/user';
+import { OpenAIService } from 'src/app/services/openai.service';
 
 @Component({
   selector: 'app-chatgpt',
@@ -18,18 +19,9 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   @ViewChild('messageContainer') private messageContainer: ElementRef;
   message = '';
   chatHistory = [];
-  isLoading = true;
 
   config = {
     enableContextHistoryChat: true,
-  };
-
-  options: AnimationOptions = {
-    path: '/assets/lotties/load.json',
-  };
-
-  styles: Partial<CSSStyleDeclaration> = {
-    width: '40vw',
   };
 
   callFirstTime: boolean = false;
@@ -38,7 +30,8 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   overlayVisible: boolean = false;
   showWhatsappImport = false;
 
-  constructor(private route: ActivatedRoute, public svDvMod: DevModeService, public dataInfSv: DataInfoService, private sttgs: SettingsService) {
+  constructor(private route: ActivatedRoute, public svDvMod: DevModeService, public dataInfSv: DataInfoService, private sttgs: SettingsService, private openAi: OpenAIService, public loadSv: LoadingService) {
+    loadSv.isLoading = true;
     this.devMode();
     this.moldProfile();
     this.initializeSubMenu();
@@ -61,23 +54,19 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
       if (this.messageContainer) {
         const messageContainerElement = this.messageContainer.nativeElement;
         messageContainerElement.scrollTop = messageContainerElement.scrollHeight;
-        this.isLoading = false;
+        this.loadSv.isLoading = false;
       }
     }, 100); // Puedes ajustar este valor si es necesario
   }
 
   importedConversation(): void {
-    // Encuentra el índice del primer mensaje de usuario o bot en la conversación
     const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
-
-    // Si no se encuentra el primer mensaje, asume que el índice es 0
     const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
 
-    // Inserta el mensaje de introducción de personalidad en la posición correcta
     this.chatHistory.splice(insertIndex, 0, {
       message: '##########\nTake this conversation as context and acquire this personality based on the frequency of words this person uses and try to imitate them as well as possible:\n' + this.dataInfSv.converWhatsapp + '\n##########',
       type: 'bot',
-      hidden: true, // Agrega esta línea
+      hidden: true,
     });
 
     this.saveChatHistory();
@@ -165,7 +154,7 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     // Añade esta línea para agregar el mensaje del usuario al historial de la conversación
     this.chatHistory.push({ message: this.message, type: 'user' });
 
-    this.isLoading = true;
+    this.loadSv.isLoading = true;
     this.callFirstTime = true;
     const model = this.sttgs.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo-0301'; //gpt-3.5-turbo
 
@@ -173,7 +162,7 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
 
     inputText = this.formatInputMessage();
 
-    const response = await this.sttgs.openAi.createChatCompletion({
+    const response = await this.openAi.openAi.createChatCompletion({
       model: model,
       messages: [
         {
@@ -192,10 +181,10 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.chatHistory.push({ message: chatResponse, type: 'bot' });
     this.scrollToBottom(); // Agrega esta línea aquí
     console.log('\n' + chatResponse + '\n');
-    // this.dataInfSv.getTokensUsedCost(response.data.usage.total_tokens);
+    this.sttgs.getTokensUsedCost(response.data.usage.total_tokens);
     // this.saveChatHistory(); // Guardar la conversación en LocalStorage
     this.message = '';
-    this.isLoading = false;
+    this.loadSv.isLoading = false;
   }
 
   loadChatHistory(): void {
