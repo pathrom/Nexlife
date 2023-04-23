@@ -7,6 +7,7 @@ import { DevModeService } from 'src/app/services/devMode.service';
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
 import { WhatsappImportComponent } from '../whatsapp-import/whatsapp-import.component';
+import { Profile } from 'src/app/models/user';
 
 @Component({
   selector: 'app-chatgpt',
@@ -22,6 +23,7 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   config = {
     enableContextHistoryChat: true,
   };
+
   options: AnimationOptions = {
     path: '/assets/lotties/load.json',
   };
@@ -104,13 +106,31 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   }
 
   moldProfile() {
-    this.route.queryParams.subscribe((params) => {
-      if (params['profileData']) {
-        this.profileData = JSON.parse(params['profileData']);
+    this.profileData = {
+      name: 'Javier Paton La Rosa',
+      age: '52',
+      work: 'Comercial',
+      hobbies: 'Futbol, Jardin, Obras',
+      featured_phrases: '',
+    };
 
-        console.log(this.profileData);
-      }
-    });
+    console.log('🚀 ~ ChatgptComponent ~ moldProfile ~ this.profileData:', this.profileData);
+    // this.route.queryParams.subscribe((params) => {
+    //   if (params['profileData']) {
+    //     const profileData = JSON.parse(params['profileData']);
+    //     const profile: Profile = {
+    //       name: profileData.name,
+    //       age: profileData.age,
+    //       work: profileData.work,
+    //       hobbies: profileData.hobbies,
+    //       featured_phrases: profileData.featured_phrases,
+    //     };
+
+    //     console.log(profile);
+
+    //     this.profileData = profile;
+    //   }
+    // });
   }
 
   saveChatHistory(): void {
@@ -128,14 +148,17 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   }
 
   formatInputMessage(): string {
-    if (this.chatHistory && this.chatHistory.length > 0) {
-      let context = this.chatHistory.map((item) => item.message).join(' ');
-      return `Situation: This is a conversation that we are going to have to simulate the following Profile, I want your output to be without annotations typical of a computer system "Response", simply return me a text answering as the simulated person, Acquires a personality with the different data: ${JSON.stringify(
-        this.profileData
-      )} \n ---------------------  \n Context: ${context} \n ---------------------  \n Message: ${this.message} \n ---------------------  \n  Intructions: No more than 150 characters`;
-    } else {
-      return this.message;
-    }
+    // const context = this.chatHistory && this.chatHistory.length > 0 ? this.chatHistory.map((item) => item.message).join(' ') : '';
+    const context = '';
+    const instructions = `Simulate the following Profile without annotations. Respond as the person with a unique personality based on the data, in ${this.sttgs.numLettersChat} characters or less.`;
+    const inputData = {
+      context: context,
+      instructions: instructions,
+      profileData: this.profileData,
+      message: this.message,
+    };
+    console.log('🚀 ~ ChatgptComponent ~ formatInputMessage ~ inputData:', inputData);
+    return JSON.stringify(inputData);
   }
 
   async callChatGpt(): Promise<void> {
@@ -144,7 +167,7 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
 
     this.isLoading = true;
     this.callFirstTime = true;
-    const model = this.sttgs.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
+    const model = this.sttgs.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo-0301'; //gpt-3.5-turbo
 
     let inputText = '';
 
@@ -162,11 +185,15 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     });
 
     const chatResponse = response.data.choices[0].message.content;
+
+    const cost = response.data.usage.total_tokens;
+    console.log('🚀 ~ ChatgptComponent ~ callChatGpt ~ cost:', cost);
+
     this.chatHistory.push({ message: chatResponse, type: 'bot' });
     this.scrollToBottom(); // Agrega esta línea aquí
     console.log('\n' + chatResponse + '\n');
-    this.dataInfSv.getTokensUsedCost(response.data.usage.total_tokens);
-    this.saveChatHistory(); // Guardar la conversación en LocalStorage
+    // this.dataInfSv.getTokensUsedCost(response.data.usage.total_tokens);
+    // this.saveChatHistory(); // Guardar la conversación en LocalStorage
     this.message = '';
     this.isLoading = false;
   }

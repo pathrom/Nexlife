@@ -63,35 +63,15 @@ export class WhatsappImportComponent {
       const dateRegex = /\\d{1,2}\/\\d{1,2}\/\\d{2,4}, \\d{1,2}:\\d{2} (?:AM|PM) - /g;
       const noDateContent = noMultimediaContent.replace(dateRegex, '');
 
-      // Eliminar espacios en blanco al principio y al final
-      const trimmedContent = noDateContent.trim();
-
       // Eliminar líneas vacías
-      const noEmptyLinesContent = trimmedContent.replace(/\\n\\n/g, '\\n');
-
-      // Eliminar espacios en blanco adicionales
-      const noExtraSpacesContent = noEmptyLinesContent.replace(/\\n\\s+/g, '\\n');
+      const noEmptyLinesContent = noDateContent.replace(/\\n\\n/g, '\\n');
 
       //  Eliminar emojis
       const emojiRegex = /\\p{Emoji}/g;
-      const noEmojiContent = noExtraSpacesContent.replace(emojiRegex, '');
-
-      // Eliminar texto que no es alfanumérico
-      const noAlphaNumericContent = noEmojiContent.replace(/[^a-zA-Z0-9\\s]/g, '');
-
-      // Eliminar texto de 1 caracter
-      const noOneCharContent = noAlphaNumericContent.replace(/\\b\\w{1}\\b/g, '');
-
-      // Eliminar texto de 2 caracteres
-      const noTwoCharContent = noOneCharContent.replace(/\\b\\w{2}\\b/g, '');
-
-      // Eliminar líneas que contengan solo números
-      const noNumberContent = noTwoCharContent.replace(/\\b\\d+\\b/g, '');
-
-      // Obtener modismos y su frecuencia
+      const noEmojiContent = noEmptyLinesContent.replace(emojiRegex, '');
 
       return {
-        content: noNumberContent,
+        content: noEmojiContent,
       };
     });
 

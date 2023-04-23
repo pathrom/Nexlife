@@ -9,9 +9,10 @@ export class SettingsService {
     this.loadChatGPT();
   }
   // gpt-4, gpt-4-0314, gpt-4-32k, gpt-4-32k-0314, gpt-3.5-turbo, gpt-3.5-turbo-0301
-  versionGPT = '4';
+  versionGPT = '3';
   role: string = 'user'; // system, user
   openAi: OpenAIApi;
+  numLettersChat = 100;
 
   changeVersionChatGPT(version: string): void {
     console.log('🚀 ~ ChatgptComponent ~ changeVersionChatGPT ~ version:', version);

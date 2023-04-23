@@ -41,6 +41,9 @@ export class FormInitialComponent implements OnInit {
       surname: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       country: ['', Validators.required],
+      age: ['', Validators.required],
+      job: ['', Validators.required],
+      hobbies: ['', Validators.required],
     });
   }
 
@@ -77,8 +80,8 @@ export class FormInitialComponent implements OnInit {
       Swal.fire('Email Invalid', '', 'error');
       return;
     }
-    if (this.activeIndex == 2 && this.myForm.controls['country'].invalid) {
-      Swal.fire('Country Invalid', '', 'error');
+    if (this.activeIndex == 2 && this.myForm.controls['country'].invalid && this.myForm.controls['age'].invalid && this.myForm.controls['job'].invalid && this.myForm.controls['hobbies'].invalid) {
+      Swal.fire('Country Invalid or Age Invalid or Job Invalid or Hobbies Invalid', '', 'error');
       return;
     }
     this.activeIndex = this.activeIndex + 1;
