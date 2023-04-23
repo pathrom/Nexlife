@@ -1,34 +1,12 @@
 <div class="chat-container">
   <div class="chat-history" #messageContainer>
-    <app-lottie *ngIf="callFirstTime"></app-lottie>
-
+    <app-lottie *ngIf="!callFirstTime"></app-lottie>
     <ng-container *ngFor="let item of chatHistory">
-      <div
-        *ngIf="!item.hidden"
-        [ngClass]="{
-          'user-message': item.type === 'user',
-          'bot-message': item.type === 'bot'
-        }"
-      >
-        <div class="message" *ngIf="item.message?.trim() !== ''">
-          {{ item.message }}
-        </div>
-      </div>
+      <app-chat-message *ngIf="!item.hidden" [item]="item"></app-chat-message>
     </ng-container>
   </div>
-  <div class="chat-input">
-    <div class="card flex flex-column md:flex-row gap-3">
-      <div class="p-inputgroup">
-        <input type="text" pInputText [(ngModel)]="message" (keyup.enter)="callChatGpt()" placeholder="Write your message..." />
-        <button type="button" pButton icon="pi pi-send" class="sendButton" (click)="callChatGpt()" [ngClass]="{ 'ui-state-disabled': loadSv.isLoading }" [disabled]="loadSv.isLoading"></button>
-
-        <p-toast></p-toast>
-        <p-menu #menu [model]="itemsSubMenu" [popup]="true" [appendTo]="'body'" [baseZIndex]="10000"></p-menu>
-        <button pButton type="button" (click)="menu.toggle($event)" icon="pi pi-ellipsis-v" class="elipsisButton"></button>
-      </div>
-    </div>
-  </div>
+  <app-chat-input (messageSent)="handleMessageSent($event)"></app-chat-input>
 
   <app-dev-mode></app-dev-mode>
-  <app-whatsapp-import *ngIf="showWhatsappImport" (close)="showWhatsappImport = false"></app-whatsapp-import>
+  <app-whatsapp-import *ngIf="showWhatsappImport" (close)="handleWhatsappImportClosed()"></app-whatsapp-import>
 </div>

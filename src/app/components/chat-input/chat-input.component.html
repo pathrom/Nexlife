@@ -1,0 +1,13 @@
+<!-- chat-input.component.html -->
+<div class="chat-input">
+  <div class="card flex flex-column md:flex-row gap-3">
+    <div class="p-inputgroup">
+      <input type="text" pInputText [(ngModel)]="message" (keyup.enter)="onSendMessage()" placeholder="Write your message..." />
+      <button type="button" pButton icon="pi pi-send" class="sendButton" (click)="onSendMessage()"></button>
+
+      <p-toast></p-toast>
+      <p-menu #menu [model]="itemsSubMenu" [popup]="true" [appendTo]="'body'" [baseZIndex]="10000"></p-menu>
+      <button pButton type="button" (click)="menu.toggle($event)" icon="pi pi-ellipsis-v" class="elipsisButton"></button>
+    </div>
+  </div>
+</div>

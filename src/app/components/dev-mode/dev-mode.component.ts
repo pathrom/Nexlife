@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { DevModeService } from './../../services/devMode.service';
 import { ChatgptComponent } from '../chatgpt/chatgpt.component';
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
@@ -10,5 +9,5 @@ import { SettingsService } from 'src/app/services/settings.service';
   styleUrls: ['./dev-mode.component.scss'],
 })
 export class DevModeComponent {
-  constructor(public svDvMod: DevModeService, public chatComponent: ChatgptComponent, public svDataInfo: DataInfoService, public sttgs: SettingsService) {}
+  constructor(public chatComponent: ChatgptComponent, public svDataInfo: DataInfoService, public config: SettingsService) {}
 }

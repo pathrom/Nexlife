@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SettingsService } from './settings.service';
 import { Configuration, OpenAIApi } from 'openai';
 
 @Injectable({
@@ -11,7 +10,7 @@ export class OpenAIService {
   private apiUrl = 'https://api.openai.com/v1/chat/completions';
   openAi: OpenAIApi;
 
-  constructor(private http: HttpClient, private sttgs: SettingsService) {}
+  constructor(private http: HttpClient) {}
 
   loadChatGPT() {
     const apiKey = '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';

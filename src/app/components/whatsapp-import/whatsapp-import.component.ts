@@ -15,7 +15,7 @@ export class WhatsappImportComponent {
   people: string[] = [];
   messages: any;
 
-  constructor(private messageService: MessageService, private whatsappSv: WhatsappParserService, private dataInfSv: DataInfoService, private sttgs: SettingsService, private openAi: OpenAIService) {}
+  constructor(private messageService: MessageService, private whatsappSv: WhatsappParserService, private dataInfSv: DataInfoService, private config: SettingsService, private openAi: OpenAIService) {}
 
   onUpload(event) {
     const file = event.files[0];

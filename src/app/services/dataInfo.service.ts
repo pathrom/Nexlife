@@ -1,6 +1,4 @@
 import { Injectable } from '@angular/core';
-import { SettingsService } from './settings.service';
-import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +9,7 @@ export class DataInfoService {
 
   private onConversationImportedCallback: () => void;
 
-  constructor(private sttngs: SettingsService) {}
+  constructor() {}
 
   setOnConversationImportedCallback(callback: () => void): void {
     this.onConversationImportedCallback = callback;

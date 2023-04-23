@@ -1,14 +1,9 @@
-import { LoadingService } from 'src/app/services/loading.service';
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from 'openai';
-import { ActivatedRoute } from '@angular/router';
-import { MenuItem, MessageService } from 'primeng/api';
-import { DevModeService } from 'src/app/services/devMode.service';
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
-import { WhatsappImportComponent } from '../whatsapp-import/whatsapp-import.component';
-import { Profile } from 'src/app/models/user';
 import { OpenAIService } from 'src/app/services/openai.service';
+import { ChatCompletionRequestMessageRoleEnum } from 'openai';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-chatgpt',
@@ -17,24 +12,15 @@ import { OpenAIService } from 'src/app/services/openai.service';
 })
 export class ChatgptComponent implements OnInit, AfterViewInit {
   @ViewChild('messageContainer') private messageContainer: ElementRef;
-  message = '';
+
   chatHistory = [];
-
-  config = {
-    enableContextHistoryChat: true,
-  };
-
-  callFirstTime: boolean = false;
+  message;
   profileData;
-  itemsSubMenu: MenuItem[];
-  overlayVisible: boolean = false;
+  callFirstTime: boolean = false;
   showWhatsappImport = false;
 
-  constructor(private route: ActivatedRoute, public svDvMod: DevModeService, public dataInfSv: DataInfoService, private sttgs: SettingsService, private openAi: OpenAIService, public loadSv: LoadingService) {
-    loadSv.isLoading = true;
-    this.devMode();
-    this.moldProfile();
-    this.initializeSubMenu();
+  constructor(public dataInfSv: DataInfoService, private config: SettingsService, private openAi: OpenAIService, private loadSv: LoadingService) {
+    this.config.devMode();
   }
 
   ngOnInit(): void {
@@ -56,9 +42,22 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
         messageContainerElement.scrollTop = messageContainerElement.scrollHeight;
         this.loadSv.isLoading = false;
       }
-    }, 100); // Puedes ajustar este valor si es necesario
+    }, 100);
   }
 
+  handleMessageSent(event: string): void {
+    // Handle the message sent event here
+    if (event === 'whatsappImport') {
+      this.showWhatsappImport = true;
+    } else {
+      this.message = event;
+      this.callChatGpt();
+    }
+  }
+  handleWhatsappImportClosed(): void {
+    // Handle the close event here
+    this.showWhatsappImport = false;
+  }
   importedConversation(): void {
     const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
     const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
@@ -73,26 +72,9 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.showWhatsappImport = false;
   }
 
-  toggle() {
-    this.overlayVisible = !this.overlayVisible;
-  }
-
-  initializeSubMenu() {
-    this.itemsSubMenu = [
-      {
-        label: 'Options',
-        items: [
-          {
-            label: 'Whatsapp Import',
-            icon: 'pi pi-refresh',
-            command: () => {
-              this.showWhatsappImport = true;
-            },
-          },
-        ],
-      },
-    ];
-  }
+  // toggle() {
+  //   this.overlayVisible = !this.overlayVisible;
+  //   }
 
   moldProfile() {
     this.profileData = {
@@ -102,31 +84,10 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
       hobbies: 'Futbol, Jardin, Obras',
       featured_phrases: '',
     };
-
-    console.log('🚀 ~ ChatgptComponent ~ moldProfile ~ this.profileData:', this.profileData);
-    // this.route.queryParams.subscribe((params) => {
-    //   if (params['profileData']) {
-    //     const profileData = JSON.parse(params['profileData']);
-    //     const profile: Profile = {
-    //       name: profileData.name,
-    //       age: profileData.age,
-    //       work: profileData.work,
-    //       hobbies: profileData.hobbies,
-    //       featured_phrases: profileData.featured_phrases,
-    //     };
-
-    //     console.log(profile);
-
-    //     this.profileData = profile;
-    //   }
-    // });
   }
 
   saveChatHistory(): void {
     localStorage.setItem('chatHistory', JSON.stringify(this.chatHistory));
-    // show message chat history saved
-
-    console.log('🚀 ~ ChatgptComponent ~ saveChatHistory ~ this.chatHistory:', this.chatHistory);
   }
 
   mapChatHistoryToRole(): any[] {
@@ -137,30 +98,24 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   }
 
   formatInputMessage(): string {
-    // const context = this.chatHistory && this.chatHistory.length > 0 ? this.chatHistory.map((item) => item.message).join(' ') : '';
     const context = '';
-    const instructions = `Simulate the following Profile without annotations. Respond as the person with a unique personality based on the data, in ${this.sttgs.numLettersChat} characters or less.`;
+    const instructions = `Simulate the following Profile without annotations. Respond as the person with a unique personality based on the data, in ${this.config.numLettersChat} characters or less.`;
     const inputData = {
       context: context,
       instructions: instructions,
       profileData: this.profileData,
       message: this.message,
     };
-    console.log('🚀 ~ ChatgptComponent ~ formatInputMessage ~ inputData:', inputData);
     return JSON.stringify(inputData);
   }
 
   async callChatGpt(): Promise<void> {
-    // Añade esta línea para agregar el mensaje del usuario al historial de la conversación
     this.chatHistory.push({ message: this.message, type: 'user' });
-
     this.loadSv.isLoading = true;
     this.callFirstTime = true;
-    const model = this.sttgs.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo-0301'; //gpt-3.5-turbo
+    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo-0301';
 
-    let inputText = '';
-
-    inputText = this.formatInputMessage();
+    let inputText = this.formatInputMessage();
 
     const response = await this.openAi.openAi.createChatCompletion({
       model: model,
@@ -176,21 +131,16 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     const chatResponse = response.data.choices[0].message.content;
 
     const cost = response.data.usage.total_tokens;
-    console.log('🚀 ~ ChatgptComponent ~ callChatGpt ~ cost:', cost);
 
     this.chatHistory.push({ message: chatResponse, type: 'bot' });
-    this.scrollToBottom(); // Agrega esta línea aquí
-    console.log('\n' + chatResponse + '\n');
-    this.sttgs.getTokensUsedCost(response.data.usage.total_tokens);
-    // this.saveChatHistory(); // Guardar la conversación en LocalStorage
+    this.scrollToBottom();
+    this.config.getTokensUsedCost(response.data.usage.total_tokens);
     this.message = '';
     this.loadSv.isLoading = false;
   }
 
   loadChatHistory(): void {
     let storedChatHistory = localStorage.getItem('chatHistory');
-    console.log('🚀 ~ ChatgptComponent ~ loadChatHistory ~ storedChatHistory:', storedChatHistory);
-
     if (storedChatHistory && storedChatHistory !== '[]') {
       if (this.config.enableContextHistoryChat === true) {
         this.chatHistory = JSON.parse(storedChatHistory);
@@ -209,20 +159,9 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     }
   }
 
-  devMode() {
-    console.log('🚀 ~ ChatgptComponent ~ devMode ~ this.route.snapshot:', this.route.snapshot);
-    if (this.route.snapshot.queryParamMap.get('devMode')) {
-      console.log('Yes devMode');
-      this.svDvMod.isDevMode = true;
-    } else {
-      console.log('No devMode');
-    }
-  }
-
   resetHistoryChat(): void {
     localStorage.removeItem('chatHistory');
     this.chatHistory = [];
-
     this.saveChatHistory();
   }
 }

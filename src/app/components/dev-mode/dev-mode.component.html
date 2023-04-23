@@ -1,10 +1,10 @@
 <div class="devModeZone">
-  <div *ngIf="svDvMod.isDevMode" class="costTokens">{{ svDataInfo.costMsg }}</div>
+  <div *ngIf="config.isDevMode" class="costTokens">{{ svDataInfo.costMsg }}</div>
 
-  <div *ngIf="svDvMod.isDevMode">
-    <p-button label="Change Version Chat GPT 3" (onClick)="sttgs.changeVersionChatGPT('3')"></p-button>
+  <div *ngIf="config.isDevMode">
+    <p-button label="Change Version Chat GPT 3" (onClick)="config.changeVersionChatGPT('3')"></p-button>
 
-    <p-button label="Change Version Chat GPT 4" (onClick)="sttgs.changeVersionChatGPT('4')"></p-button>
+    <p-button label="Change Version Chat GPT 4" (onClick)="config.changeVersionChatGPT('4')"></p-button>
 
     <p-button label="Reset History Chat" (onClick)="chatComponent.resetHistoryChat()"></p-button>
   </div>
