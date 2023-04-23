@@ -17,7 +17,7 @@ import { WhatsappImportComponent } from './components/whatsapp-import/whatsapp-i
 import { DevModeComponent } from './components/dev-mode/dev-mode.component';
 import { DataInfoService } from './services/dataInfo.service';
 import { SettingsService } from './services/settings.service';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { WhatsappParserService } from './services/whatsapp-parser.service';
 import { OpenAIService } from './services/openai.service';
 import { HttpClientModule } from '@angular/common/http';

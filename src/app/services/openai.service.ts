@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
 import { Configuration, OpenAIApi } from 'openai';
+import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OpenAIService {
-  private apiUrl = 'https://api.openai.com/v1/chat/completions';
   openAi: OpenAIApi;
 
-  constructor(private http: HttpClient) {}
+  constructor(private config: SettingsService) {
+    this.loadChatGPT();
+  }
 
   loadChatGPT() {
-    const apiKey = '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';
+    const apiKey = this.config.getApiKey();
     this.openAi = this.createOpenAiClient(apiKey);
   }
 
@@ -22,16 +22,7 @@ export class OpenAIService {
     return new OpenAIApi(configuration);
   }
 
-  chat(completion: any): Observable<any> {
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `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`,
-    };
-
-    return this.http.post<any>(this.apiUrl, completion, { headers });
-  }
-
-  async sendChatGpt(model, instructions) {
+  async sendChatGpt(instructions, model) {
     try {
       const response = await this.openAi.createChatCompletion({
         model: model,
@@ -39,10 +30,20 @@ export class OpenAIService {
       });
 
       const res = response.data.choices[0].message.content;
+      this.getTokensUsedCost(response.data.usage.total_tokens);
+
       return res;
     } catch (error) {
       console.log('Error: ', error);
       return error;
     }
+  }
+
+  getTokensUsedCost(tokensUsed: number): void {
+    const COST_PER_TOKEN = this.config.versionGPT === '4' ? 0.00008 : 0.000002;
+    const cost = tokensUsed * COST_PER_TOKEN;
+    const costMsg = `Tokens used: ${tokensUsed} \n Cost: ${cost.toFixed(4)}`;
+
+    console.log('🚀 ~ SettingsService ~ getTokensUsedCost ~ costMsg:', costMsg);
   }
 }

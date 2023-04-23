@@ -3,12 +3,18 @@
   top: 0 !important;
   font-size: 0em !important;
 }
+
 :host ::ng-deep .devModeZone button {
   width: 33vw !important;
   // font-size: 1em !important;
 }
+
 .costTokens {
   margin: 0 auto;
   position: fixed;
   bottom: 52px;
+}
+
+:host ::ng-deep .p-button {
+  width: 100px;
 }

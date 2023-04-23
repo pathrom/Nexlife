@@ -1,0 +1,28 @@
+.user-message,
+.bot-message {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.user-message .message {
+  align-self: flex-end;
+  background-color: #2b3feb;
+  color: #fff;
+  border-radius: 7px;
+  padding: 8px;
+  max-width: 80%;
+  word-wrap: break-word;
+  font-family: "Montserrat", system-ui;
+}
+
+.bot-message .message {
+  align-self: flex-start;
+  background-color: #f9f9f9;
+  color: #333;
+  border-radius: 7px;
+  padding: 8px;
+  max-width: 80%;
+  word-wrap: break-word;
+  font-family: "Montserrat", system-ui;
+}

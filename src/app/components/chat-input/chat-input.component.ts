@@ -3,6 +3,7 @@ import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-chat-input',
+  styleUrls: ['./chat-input.component.scss'],
   templateUrl: './chat-input.component.html',
 })
 export class ChatInputComponent {

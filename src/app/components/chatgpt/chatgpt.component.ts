@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angula
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
 import { OpenAIService } from 'src/app/services/openai.service';
-import { ChatCompletionRequestMessageRoleEnum } from 'openai';
+import { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum } from 'openai';
 import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
@@ -46,7 +46,6 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   }
 
   handleMessageSent(event: string): void {
-    // Handle the message sent event here
     if (event === 'whatsappImport') {
       this.showWhatsappImport = true;
     } else {
@@ -54,10 +53,11 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
       this.callChatGpt();
     }
   }
+
   handleWhatsappImportClosed(): void {
-    // Handle the close event here
     this.showWhatsappImport = false;
   }
+
   importedConversation(): void {
     const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
     const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
@@ -71,10 +71,6 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.saveChatHistory();
     this.showWhatsappImport = false;
   }
-
-  // toggle() {
-  //   this.overlayVisible = !this.overlayVisible;
-  //   }
 
   moldProfile() {
     this.profileData = {
@@ -113,28 +109,22 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.chatHistory.push({ message: this.message, type: 'user' });
     this.loadSv.isLoading = true;
     this.callFirstTime = true;
-    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo-0301';
 
-    let inputText = this.formatInputMessage();
+    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo-0301'; //gpt-3.5-turbo-0301
+    const inputText = this.formatInputMessage();
 
-    const response = await this.openAi.openAi.createChatCompletion({
-      model: model,
-      messages: [
-        {
-          role: ChatCompletionRequestMessageRoleEnum.System,
-          content: inputText,
-        },
-        ...this.mapChatHistoryToRole(),
-      ],
-    });
+    const instructions: any = [
+      {
+        role: ChatCompletionRequestMessageRoleEnum.System,
+        content: inputText,
+      },
+      ...this.mapChatHistoryToRole(),
+    ];
 
-    const chatResponse = response.data.choices[0].message.content;
-
-    const cost = response.data.usage.total_tokens;
+    let chatResponse = await this.openAi.sendChatGpt(instructions, model);
 
     this.chatHistory.push({ message: chatResponse, type: 'bot' });
     this.scrollToBottom();
-    this.config.getTokensUsedCost(response.data.usage.total_tokens);
     this.message = '';
     this.loadSv.isLoading = false;
   }
