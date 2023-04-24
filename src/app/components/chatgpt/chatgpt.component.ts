@@ -2,8 +2,10 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angula
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
 import { OpenAIService } from 'src/app/services/openai.service';
-import { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum } from 'openai';
+import { ChatCompletionRequestMessageRoleEnum } from 'openai';
 import { LoadingService } from 'src/app/services/loading.service';
+import { ActivatedRoute } from '@angular/router';
+import { Profile } from 'src/app/models/user';
 
 @Component({
   selector: 'app-chatgpt',
@@ -15,15 +17,16 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
 
   chatHistory = [];
   message;
-  profileData;
-  callFirstTime: boolean = false;
+  profileData: Profile;
   showWhatsappImport = false;
+  callFirstTime: boolean = false;
 
-  constructor(public dataInfSv: DataInfoService, private config: SettingsService, private openAi: OpenAIService, private loadSv: LoadingService) {
+  constructor(public dataInfSv: DataInfoService, private config: SettingsService, private openAi: OpenAIService, private loadSv: LoadingService, private route: ActivatedRoute) {
     this.config.devMode();
   }
 
   ngOnInit(): void {
+    this.subscribeToProfileData();
     this.loadChatHistory();
 
     this.dataInfSv.setOnConversationImportedCallback(() => {
@@ -33,6 +36,32 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.scrollToBottom();
+  }
+
+  setDefaultProfileData(): void {
+    this.profileData = {
+      name: 'Javier',
+      surname: 'Paton',
+      email: 'javier.paton@example.com',
+      age: '52',
+      work: 'Comercial',
+      hobbies: ['Futbol', 'Jardin', 'Obras'],
+      featured_phrases: ['Eres un crack', 'Que pasa kun'],
+      country: 'Spain',
+    };
+  }
+
+  subscribeToProfileData(): void {
+    this.route.queryParams.subscribe((params) => {
+      if (params['profileData']) {
+        const profileData = JSON.parse(params['profileData']);
+        this.profileData = { ...profileData };
+      } else {
+        this.setDefaultProfileData();
+      }
+
+      console.log('🚀 ~ ChatgptComponent ~ subscribeToProfileData ~ this.profileData:', this.profileData);
+    });
   }
 
   private scrollToBottom(): void {
@@ -45,7 +74,12 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     }, 100);
   }
 
+  // Event Handlers
   handleMessageSent(event: string): void {
+    if (!this.callFirstTime) {
+      this.callFirstTime = true;
+    }
+
     if (event === 'whatsappImport') {
       this.showWhatsappImport = true;
     } else {
@@ -53,33 +87,37 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
       this.callChatGpt();
     }
   }
-
   handleWhatsappImportClosed(): void {
     this.showWhatsappImport = false;
   }
 
-  importedConversation(): void {
+  async importedConversation(): Promise<void> {
     const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
     const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
+    let message = '##########\nTake this conversation as context and acquire this personality based on the frequency of words this person uses and try to imitate them as well as possible:\n' + this.dataInfSv.converWhatsapp + '\n########## No response needed, only context';
+    console.log('🚀 ~ ChatgptComponent ~ importedConversation ~ message:', message);
 
     this.chatHistory.splice(insertIndex, 0, {
-      message: '##########\nTake this conversation as context and acquire this personality based on the frequency of words this person uses and try to imitate them as well as possible:\n' + this.dataInfSv.converWhatsapp + '\n##########',
+      message: message,
       type: 'bot',
       hidden: true,
     });
 
     this.saveChatHistory();
     this.showWhatsappImport = false;
-  }
 
-  moldProfile() {
-    this.profileData = {
-      name: 'Javier Paton La Rosa',
-      age: '52',
-      work: 'Comercial',
-      hobbies: 'Futbol, Jardin, Obras',
-      featured_phrases: '',
-    };
+    const model = 'gpt-3.5-turbo';
+    const role = ChatCompletionRequestMessageRoleEnum.User;
+    const instructions: any = [
+      {
+        role: role,
+        content: message,
+      },
+      ...this.mapChatHistoryToRole(),
+    ];
+
+    let chatResponse = await this.openAi.sendChatGpt(instructions, model);
+    console.log('🚀 ~ ChatgptComponent ~ importedConversation ~ chatResponse:', chatResponse);
   }
 
   saveChatHistory(): void {
@@ -99,7 +137,6 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     const inputData = {
       context: context,
       instructions: instructions,
-      profileData: this.profileData,
       message: this.message,
     };
     return JSON.stringify(inputData);
@@ -108,12 +145,11 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   async callChatGpt(): Promise<void> {
     this.chatHistory.push({ message: this.message, type: 'user' });
     this.loadSv.isLoading = true;
-    this.callFirstTime = true;
 
-    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo-0301'; //gpt-3.5-turbo-0301
+    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo'; //gpt-3.5-turbo-0301
     const inputText = this.formatInputMessage();
 
-    const instructions: any = [
+    let instructions: any[] = [
       {
         role: ChatCompletionRequestMessageRoleEnum.System,
         content: inputText,
@@ -121,12 +157,28 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
       ...this.mapChatHistoryToRole(),
     ];
 
+    if (this.callFirstTime && this.chatHistory.length > 0) {
+      instructions = [
+        {
+          role: ChatCompletionRequestMessageRoleEnum.System,
+          content: inputText,
+        },
+        ...this.mapChatHistoryToRole(),
+      ];
+    } else {
+      instructions = instructions.slice(-1);
+    }
+
     let chatResponse = await this.openAi.sendChatGpt(instructions, model);
 
     this.chatHistory.push({ message: chatResponse, type: 'bot' });
     this.scrollToBottom();
     this.message = '';
     this.loadSv.isLoading = false;
+
+    if (!this.callFirstTime || this.chatHistory.length === 0) {
+      this.callFirstTime = true;
+    }
   }
 
   loadChatHistory(): void {
@@ -134,18 +186,10 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     if (storedChatHistory && storedChatHistory !== '[]') {
       if (this.config.enableContextHistoryChat === true) {
         this.chatHistory = JSON.parse(storedChatHistory);
-        this.callFirstTime = true;
       }
     }
-  }
-
-  async speakText(text: string): Promise<void> {
-    const synth = window.speechSynthesis;
-    if (synth) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      synth.speak(utterance);
-    } else {
-      console.warn('Speech synthesis is not supported in this browser.');
+    if (this.chatHistory.length > 0 && !this.callFirstTime) {
+      this.callFirstTime = true;
     }
   }
 

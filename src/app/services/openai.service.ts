@@ -6,23 +6,23 @@ import { SettingsService } from './settings.service';
   providedIn: 'root',
 })
 export class OpenAIService {
-  openAi: OpenAIApi;
+  private openAi: OpenAIApi;
+  private readonly COST_PER_TOKEN_GPT_4 = 0.00008;
+  private readonly COST_PER_TOKEN_OTHER_VERSIONS = 0.000002;
 
   constructor(private config: SettingsService) {
     this.loadChatGPT();
   }
 
-  loadChatGPT() {
+  private loadChatGPT() {
     const apiKey = this.config.getApiKey();
-    this.openAi = this.createOpenAiClient(apiKey);
-  }
-
-  createOpenAiClient(apiKey: string): OpenAIApi {
     const configuration = new Configuration({ apiKey });
-    return new OpenAIApi(configuration);
+    this.openAi = new OpenAIApi(configuration);
+    console.log('🚀 ~ OpenAIService ~ loadChatGPT ~ this.openAi:', this.openAi);
   }
 
-  async sendChatGpt(instructions, model) {
+  public async sendChatGpt(instructions, model) {
+    console.log('🚀 ~ OpenAIService ~ sendChatGpt ~ instructions:', instructions);
     try {
       const response = await this.openAi.createChatCompletion({
         model: model,
@@ -30,20 +30,17 @@ export class OpenAIService {
       });
 
       const res = response.data.choices[0].message.content;
-      this.getTokensUsedCost(response.data.usage.total_tokens);
+      const tokensUsed = response.data.usage.total_tokens;
+      const costPerToken = this.config.versionGPT === '4' ? this.COST_PER_TOKEN_GPT_4 : this.COST_PER_TOKEN_OTHER_VERSIONS;
+      const cost = tokensUsed * costPerToken;
+      const costMsg = `Tokens used: ${tokensUsed} \n Cost: ${cost.toFixed(4)}`;
+
+      console.log('🚀 ~ OpenAIService ~ sendChatGpt ~ costMsg:', costMsg);
 
       return res;
     } catch (error) {
       console.log('Error: ', error);
       return error;
     }
-  }
-
-  getTokensUsedCost(tokensUsed: number): void {
-    const COST_PER_TOKEN = this.config.versionGPT === '4' ? 0.00008 : 0.000002;
-    const cost = tokensUsed * COST_PER_TOKEN;
-    const costMsg = `Tokens used: ${tokensUsed} \n Cost: ${cost.toFixed(4)}`;
-
-    console.log('🚀 ~ SettingsService ~ getTokensUsedCost ~ costMsg:', costMsg);
   }
 }
