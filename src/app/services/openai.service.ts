@@ -18,11 +18,10 @@ export class OpenAIService {
     const apiKey = this.config.getApiKey();
     const configuration = new Configuration({ apiKey });
     this.openAi = new OpenAIApi(configuration);
-    console.log('🚀 ~ OpenAIService ~ loadChatGPT ~ this.openAi:', this.openAi);
   }
 
   public async sendChatGpt(instructions, model) {
-    console.log('🚀 ~ OpenAIService ~ sendChatGpt ~ instructions:', instructions);
+    console.log('INSTRUCTIONS SEND TO CHATGPT API', instructions, model);
     try {
       const response = await this.openAi.createChatCompletion({
         model: model,
@@ -35,7 +34,8 @@ export class OpenAIService {
       const cost = tokensUsed * costPerToken;
       const costMsg = `Tokens used: ${tokensUsed} \n Cost: ${cost.toFixed(4)}`;
 
-      console.log('🚀 ~ OpenAIService ~ sendChatGpt ~ costMsg:', costMsg);
+      console.log('RESPONSE FROM API', res);
+      console.log('COST OF REQUEST:', costMsg);
 
       return res;
     } catch (error) {

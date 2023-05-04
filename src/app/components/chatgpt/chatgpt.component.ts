@@ -1,11 +1,11 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Profile } from './../../models/user';
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { SettingsService } from 'src/app/services/settings.service';
 import { OpenAIService } from 'src/app/services/openai.service';
 import { ChatCompletionRequestMessageRoleEnum } from 'openai';
 import { LoadingService } from 'src/app/services/loading.service';
-import { ActivatedRoute } from '@angular/router';
-import { Profile } from 'src/app/models/user';
 
 @Component({
   selector: 'app-chatgpt',
@@ -15,11 +15,13 @@ import { Profile } from 'src/app/models/user';
 export class ChatgptComponent implements OnInit, AfterViewInit {
   @ViewChild('messageContainer') private messageContainer: ElementRef;
 
-  chatHistory = [];
-  message;
+  chatHistory: { message: string; type: string; hidden?: boolean }[] = [];
+  message: string;
   profileData: Profile;
   showWhatsappImport = false;
-  callFirstTime: boolean = false;
+  callFirstTime = false;
+  private initialMessageSent = false;
+  private chatHistoryForAPI: { role: ChatCompletionRequestMessageRoleEnum; content: string }[] = [];
 
   constructor(public dataInfSv: DataInfoService, private config: SettingsService, private openAi: OpenAIService, private loadSv: LoadingService, private route: ActivatedRoute) {
     this.config.devMode();
@@ -30,7 +32,7 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.loadChatHistory();
 
     this.dataInfSv.setOnConversationImportedCallback(() => {
-      this.importedConversation();
+      // this.importedConversation();
     });
   }
 
@@ -38,30 +40,46 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.scrollToBottom();
   }
 
-  setDefaultProfileData(): void {
-    this.profileData = {
-      name: 'Javier',
-      surname: 'Paton',
-      email: 'javier.paton@example.com',
-      age: '52',
-      work: 'Comercial',
-      hobbies: ['Futbol', 'Jardin', 'Obras'],
-      featured_phrases: ['Eres un crack', 'Que pasa kun'],
-      country: 'Spain',
-    };
+  private async subscribeToProfileData(): Promise<void> {
+    if (this.chatHistory.length === 0) {
+      this.route.queryParams.subscribe(async (params) => {
+        await this.loadProfileData(params);
+        await this.sendInitialMessage();
+      });
+    }
   }
 
-  subscribeToProfileData(): void {
-    this.route.queryParams.subscribe((params) => {
-      if (params['profileData']) {
-        const profileData = JSON.parse(params['profileData']);
-        this.profileData = { ...profileData };
+  private async loadProfileData(params: any): Promise<void> {
+    if (params['profileData']) {
+      const profileData = JSON.parse(params['profileData']);
+      this.profileData = { ...profileData };
+      localStorage.setItem('profileData', JSON.stringify(this.profileData));
+    } else {
+      const storedProfileData = localStorage.getItem('profileData');
+      if (storedProfileData) {
+        this.profileData = JSON.parse(storedProfileData);
       } else {
-        this.setDefaultProfileData();
+        this.profileData = this.dataInfSv.setProfileDataDummy();
       }
+    }
+  }
 
-      console.log('🚀 ~ ChatgptComponent ~ subscribeToProfileData ~ this.profileData:', this.profileData);
-    });
+  private async sendInitialMessage(): Promise<void> {
+    this.loadSv.isLoading = true;
+
+    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
+    const inputText = this.formatFirstPersonalityMessage();
+    const instructions = [
+      {
+        role: ChatCompletionRequestMessageRoleEnum.System,
+        content: inputText,
+      },
+      ...this.mapChatHistoryToRole(),
+    ];
+
+    await this.openAi.sendChatGpt(instructions, model);
+
+    this.loadSv.isLoading = false;
   }
 
   private scrollToBottom(): void {
@@ -74,7 +92,6 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     }, 100);
   }
 
-  // Event Handlers
   handleMessageSent(event: string): void {
     if (!this.callFirstTime) {
       this.callFirstTime = true;
@@ -87,57 +104,28 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
       this.callChatGpt();
     }
   }
+
   handleWhatsappImportClosed(): void {
     this.showWhatsappImport = false;
-  }
-
-  async importedConversation(): Promise<void> {
-    const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
-    const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
-    let message = '##########\nTake this conversation as context and acquire this personality based on the frequency of words this person uses and try to imitate them as well as possible:\n' + this.dataInfSv.converWhatsapp + '\n########## No response needed, only context';
-    console.log('🚀 ~ ChatgptComponent ~ importedConversation ~ message:', message);
-
-    this.chatHistory.splice(insertIndex, 0, {
-      message: message,
-      type: 'bot',
-      hidden: true,
-    });
-
-    this.saveChatHistory();
-    this.showWhatsappImport = false;
-
-    const model = 'gpt-3.5-turbo';
-    const role = ChatCompletionRequestMessageRoleEnum.User;
-    const instructions: any = [
-      {
-        role: role,
-        content: message,
-      },
-      ...this.mapChatHistoryToRole(),
-    ];
-
-    let chatResponse = await this.openAi.sendChatGpt(instructions, model);
-    console.log('🚀 ~ ChatgptComponent ~ importedConversation ~ chatResponse:', chatResponse);
   }
 
   saveChatHistory(): void {
     localStorage.setItem('chatHistory', JSON.stringify(this.chatHistory));
   }
 
-  mapChatHistoryToRole(): any[] {
+  mapChatHistoryToRole(): { role: ChatCompletionRequestMessageRoleEnum; content: string }[] {
     return this.chatHistory.map((item) => ({
       role: item.type === 'user' ? ChatCompletionRequestMessageRoleEnum.User : ChatCompletionRequestMessageRoleEnum.Assistant,
       content: item.message,
     }));
   }
 
-  formatInputMessage(): string {
-    const context = '';
+  formatFirstPersonalityMessage(): string {
     const instructions = `Simulate the following Profile without annotations. Respond as the person with a unique personality based on the data, in ${this.config.numLettersChat} characters or less.`;
+
     const inputData = {
-      context: context,
       instructions: instructions,
-      message: this.message,
+      message: this.profileData,
     };
     return JSON.stringify(inputData);
   }
@@ -146,32 +134,12 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.chatHistory.push({ message: this.message, type: 'user' });
     this.loadSv.isLoading = true;
 
-    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo'; //gpt-3.5-turbo-0301
-    const inputText = this.formatInputMessage();
+    const model = this.config.versionGPT === '4' ? 'gpt-4' : 'gpt-3.5-turbo';
+    const instructions = this.generateInstructions(this.message);
 
-    let instructions: any[] = [
-      {
-        role: ChatCompletionRequestMessageRoleEnum.System,
-        content: inputText,
-      },
-      ...this.mapChatHistoryToRole(),
-    ];
+    const chatResponse = await this.openAi.sendChatGpt(instructions, model);
 
-    if (this.callFirstTime && this.chatHistory.length > 0) {
-      instructions = [
-        {
-          role: ChatCompletionRequestMessageRoleEnum.System,
-          content: inputText,
-        },
-        ...this.mapChatHistoryToRole(),
-      ];
-    } else {
-      instructions = instructions.slice(-1);
-    }
-
-    let chatResponse = await this.openAi.sendChatGpt(instructions, model);
-
-    this.chatHistory.push({ message: chatResponse, type: 'bot' });
+    this.chatHistory.push({ message: chatResponse, type: 'bot', hidden: false });
     this.scrollToBottom();
     this.message = '';
     this.loadSv.isLoading = false;
@@ -181,8 +149,24 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     }
   }
 
+  generateInstructions(inputText: string): any[] {
+    if (!this.initialMessageSent) {
+      this.chatHistoryForAPI.push({
+        role: ChatCompletionRequestMessageRoleEnum.System,
+        content: this.formatFirstPersonalityMessage(),
+      });
+    }
+
+    this.chatHistoryForAPI.push({
+      role: ChatCompletionRequestMessageRoleEnum.User,
+      content: inputText,
+    });
+
+    return this.chatHistoryForAPI;
+  }
+
   loadChatHistory(): void {
-    let storedChatHistory = localStorage.getItem('chatHistory');
+    const storedChatHistory = localStorage.getItem('chatHistory');
     if (storedChatHistory && storedChatHistory !== '[]') {
       if (this.config.enableContextHistoryChat === true) {
         this.chatHistory = JSON.parse(storedChatHistory);
@@ -198,4 +182,31 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.chatHistory = [];
     this.saveChatHistory();
   }
+
+  // async importedConversation(): Promise<void> {
+  //   console.log('IMPORTED CONVERSATION');
+  //   const firstMessageIndex = this.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
+  //   const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
+  //   const message = '##########\nTake this conversation as context and acquire this personality based on the frequency of words this person uses and try to imitate them as well as possible:\n' + this.dataInfSv.converWhatsapp + '\n########## No response needed, only context';
+  //   this.chatHistory.splice(insertIndex, 0, {
+  //     message: message,
+  //     type: 'bot',
+  //     hidden: true,
+  //   });
+
+  //   this.saveChatHistory();
+  //   this.showWhatsappImport = false;
+
+  //   const model = 'gpt-3.5-turbo';
+  //   const role = ChatCompletionRequestMessageRoleEnum.Assistant;
+  //   const instructions = [
+  //     {
+  //       role: role,
+  //       content: message,
+  //     },
+  //     ...this.mapChatHistoryToRole(),
+  //   ];
+
+  //   await this.openAi.sendChatGpt(instructions, model);
+  // }
 }
