@@ -1,10 +1,42 @@
-import { Message } from './../../../node_modules/primeng/api/message.d';
 import { Injectable } from '@angular/core';
+import { DataInfoService } from './dataInfo.service';
+import { OpenAIService } from './openai.service';
+import { ChatCompletionRequestMessageRoleEnum } from 'openai';
+
 @Injectable({
   providedIn: 'root',
 })
-export class WhatsappParserService {
-  constructor() {}
+export class WhatsappImportService {
+  showWhatsappImport = false;
+
+  constructor(private dataInfSv: DataInfoService, private openAi: OpenAIService) {}
+
+  async importedConversation(): Promise<void> {
+    console.log('IMPORTED CONVERSATION');
+    const firstMessageIndex = this.dataInfSv.chatHistory.findIndex((item) => item.type === 'user' || item.type === 'bot');
+    const insertIndex = firstMessageIndex === -1 ? 0 : firstMessageIndex;
+    const message = '##########\nTake this conversation as context and acquire this personality based on the frequency of words this person uses and try to imitate them as well as possible:\n' + this.dataInfSv.converWhatsapp + '\n########## No response needed, only context';
+    this.dataInfSv.chatHistory.splice(insertIndex, 0, {
+      message: message,
+      type: 'bot',
+      hidden: true,
+    });
+
+    this.dataInfSv.saveChatHistory();
+    this.showWhatsappImport = false;
+
+    const model = 'gpt-3.5-turbo';
+    const role = ChatCompletionRequestMessageRoleEnum.Assistant;
+    const instructions = [
+      {
+        role: role,
+        content: message,
+      },
+      ...this.dataInfSv.mapChatHistoryToRole(),
+    ];
+
+    await this.openAi.sendChatGpt(instructions, model);
+  }
 
   parseFileContent(content: string) {
     const messages = content.split(/\n/).map((line) => {

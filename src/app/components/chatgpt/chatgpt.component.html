@@ -1,12 +1,12 @@
 <div class="chat-container">
   <div class="chat-history" #messageContainer>
     <app-lottie *ngIf="!callFirstTime"></app-lottie>
-    <ng-container *ngFor="let item of chatHistory">
+    <ng-container *ngFor="let item of dataInfSv.chatHistory">
       <app-chat-message *ngIf="!item.hidden" [item]="item"></app-chat-message>
     </ng-container>
   </div>
   <app-chat-input (messageSent)="handleMessageSent($event)"></app-chat-input>
 
   <app-dev-mode></app-dev-mode>
-  <app-whatsapp-import *ngIf="showWhatsappImport" (close)="handleWhatsappImportClosed()"></app-whatsapp-import>
+  <app-whatsapp-import *ngIf="whatsappImpSv.showWhatsappImport" (close)="handleWhatsappImportClosed()"></app-whatsapp-import>
 </div>

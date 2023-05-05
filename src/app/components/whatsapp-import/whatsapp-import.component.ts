@@ -3,7 +3,7 @@ import { MessageService } from 'primeng/api';
 import { DataInfoService } from 'src/app/services/dataInfo.service';
 import { OpenAIService } from 'src/app/services/openai.service';
 import { SettingsService } from 'src/app/services/settings.service';
-import { WhatsappParserService } from 'src/app/services/whatsapp-parser.service';
+import { WhatsappImportService } from 'src/app/services/whatsapp-import.service';
 
 @Component({
   selector: 'app-whatsapp-import',
@@ -15,7 +15,7 @@ export class WhatsappImportComponent {
   people: string[] = [];
   messages: any;
 
-  constructor(private messageService: MessageService, private whatsappSv: WhatsappParserService, private dataInfSv: DataInfoService, private config: SettingsService, private openAi: OpenAIService) {}
+  constructor(private messageService: MessageService, private whatsappSv: WhatsappImportService, private dataInfSv: DataInfoService, private config: SettingsService, private openAi: OpenAIService) {}
 
   onUpload(event) {
     const file = event.files[0];

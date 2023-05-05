@@ -18,7 +18,7 @@ import { DevModeComponent } from './components/dev-mode/dev-mode.component';
 import { DataInfoService } from './services/dataInfo.service';
 import { SettingsService } from './services/settings.service';
 import { MessageService } from 'primeng/api';
-import { WhatsappParserService } from './services/whatsapp-parser.service';
+import { WhatsappImportService } from './services/whatsapp-import.service';
 import { OpenAIService } from './services/openai.service';
 import { HttpClientModule } from '@angular/common/http';
 import { LottieComponent } from './components/lottie/lottie.component';
@@ -30,7 +30,7 @@ import { ChatInputComponent } from './components/chat-input/chat-input.component
 @NgModule({
   declarations: [AppComponent, ChatgptComponent, PrivacyPolicyComponent, HomeComponent, FormInitialComponent, WhatsappImportComponent, DevModeComponent, LottieComponent, LoadingComponent, ChatMessageComponent, ChatInputComponent],
   imports: [BrowserModule, BrowserAnimationsModule, AppRoutingModule, FormsModule, CommonModule, SharedModule, AppLayoutModule, HttpClientModule],
-  providers: [AuthenticationService, SweetAlert2Module, DataInfoService, SettingsService, MessageService, WhatsappParserService, OpenAIService, LoadingService],
+  providers: [AuthenticationService, SweetAlert2Module, DataInfoService, SettingsService, MessageService, WhatsappImportService, OpenAIService, LoadingService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
