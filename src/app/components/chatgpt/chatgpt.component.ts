@@ -14,8 +14,6 @@ import { WhatsappImportService } from 'src/app/services/whatsapp-import.service'
   styleUrls: ['./chatgpt.component.scss'],
 })
 export class ChatgptComponent implements OnInit, AfterViewInit {
-  @ViewChild('messageContainer') private messageContainer: ElementRef;
-
   message: string;
   profileData: Profile;
   callFirstTime = false;
@@ -35,7 +33,7 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.scrollToBottom();
+    this.loadSv.scrollToBottom();
   }
 
   private async subscribeToProfileData(): Promise<void> {
@@ -80,16 +78,6 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     this.loadSv.isLoading = false;
   }
 
-  private scrollToBottom(): void {
-    setTimeout(() => {
-      if (this.messageContainer) {
-        const messageContainerElement = this.messageContainer.nativeElement;
-        messageContainerElement.scrollTop = messageContainerElement.scrollHeight;
-        this.loadSv.isLoading = false;
-      }
-    }, 100);
-  }
-
   handleMessageSent(event: string): void {
     if (!this.callFirstTime) {
       this.callFirstTime = true;
@@ -127,7 +115,7 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     const chatResponse = await this.openAi.sendChatGpt(instructions, model);
 
     this.dataInfSv.chatHistory.push({ message: chatResponse, type: 'bot', hidden: false });
-    this.scrollToBottom();
+    this.loadSv.scrollToBottom();
     this.message = '';
     this.loadSv.isLoading = false;
 
@@ -162,11 +150,5 @@ export class ChatgptComponent implements OnInit, AfterViewInit {
     if (this.dataInfSv.chatHistory.length > 0 && !this.callFirstTime) {
       this.callFirstTime = true;
     }
-  }
-
-  resetHistoryChat(): void {
-    localStorage.removeItem('chatHistory');
-    this.dataInfSv.chatHistory = [];
-    this.dataInfSv.saveChatHistory();
   }
 }

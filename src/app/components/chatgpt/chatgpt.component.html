@@ -1,5 +1,5 @@
 <div class="chat-container">
-  <div class="chat-history" #messageContainer>
+  <div id="chat-history">
     <app-lottie *ngIf="!callFirstTime"></app-lottie>
     <ng-container *ngFor="let item of dataInfSv.chatHistory">
       <app-chat-message *ngIf="!item.hidden" [item]="item"></app-chat-message>
